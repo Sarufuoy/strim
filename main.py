@@ -13,7 +13,7 @@ except ImportError:
     from typing_extensions import Literal
 from datetime import date as _datetimedate
 
-_pass = str(input("Enter MySQL Database Password: "))
+_pass = "saransh2009"#str(input("Enter MySQL Database Password: "))
 try:
     mydb = connect(
         host="localhost",
@@ -809,7 +809,7 @@ class loginpage(tk.Frame):
                     )
                     l+=20
                 
-                
+           
             def booktrain(t, fro, to):
                 if basic.getdatawhere('log', 'userlogin', f'log="{hex(uuid.getnode())}"') == []:
                     mb.showerror(
@@ -836,11 +836,89 @@ class loginpage(tk.Frame):
                         relwidth=1,
                         relheight=1
                     )
-                user = basic.getdatawhere('id', 'userlogin', f'log="{hex(uuid.getnode())}"')[0][0]
-                print('User ID:', user)
-                print('Train No:', t)
-                print('From:', fro)
-                print('To:', to)
+                    title=Image.open("assets/Templates/title.png")
+                    book.timg = ImageTk.PhotoImage(title)
+                    title = tk.Label(book,
+                                     image=book.timg,
+                                     relief="flat"
+                                     ).place(x=0, 
+                                            y=0)
+                    book.altopt = tk.Frame(book)
+                    _h=300
+                    _w=260
+                    book.altopt.place(
+                        x=400,
+                        y=80,
+                        width=_w,
+                        height=_h
+                        )
+                    book.altoptcanvas = tk.Canvas(
+                        book.altopt,
+                        highlightthickness=0,
+                        bg="#F8F3D9"
+                    )
+                    book.altoptscrollbar = tk.Scrollbar(
+                        book.altopt,
+                        orient="vertical",
+                        command=book.altoptcanvas.yview
+                    )
+                    book.altoptframe = tk.Frame(
+                        book.altoptcanvas,
+                        bg="#F8F3D9"
+                    )
+                    book.altoptframe.bind(
+                        "<Configure>",
+                        lambda e: book.altoptcanvas.configure(
+                            scrollregion=book.altoptcanvas.bbox("all")
+                        )
+                    )
+                    book.altoptcanvas.create_window(
+                        (0,0),
+                        window=book.altoptframe,
+                        anchor="nw",
+                        width=_w-20,
+                    )
+                    book.altoptcanvas.configure(
+                        yscrollcommand=book.altoptscrollbar.set
+                    )
+                    book.altoptcanvas.place(
+                        x=0,
+                        y=0,
+                        width=_w-20,
+                        height=_h
+                    )
+                    book.altoptscrollbar.place(
+                        x=_w-20,
+                        y=0,
+                        width=20,
+                        height=_h
+                    )
+                    book.altopt.grid_rowconfigure(
+                        0,
+                        weight=1
+                    )
+                    book.altopt.grid_columnconfigure(   
+                        0,
+                        weight=1
+                    )
+                    tk.Label(book, 
+                            text="Alternate Trains",
+                            bg="#4EB4DD",
+                            font="Consolas 10 bold", 
+                            anchor="c").place(
+                                x=400,
+                                y=60,
+                                width=_w
+                                )
+
+                    user = basic.getdatawhere('id', 'userlogin', f'log="{hex(uuid.getnode())}"')[0][0]
+                    print('User ID:', user)
+                    print('Train No:', t)
+                    print('From:', fro)
+                    print('To:', to)
+ 
+                
+                
 
 
         limg = Image.open("assets/dawnbackground.png")
