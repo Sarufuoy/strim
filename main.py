@@ -13,7 +13,7 @@ except ImportError:
     from typing_extensions import Literal
 from datetime import date as _datetimedate
 
-_pass = "saransh2009"#str(input("Enter MySQL Database Password: "))
+_pass = str(input("Enter MySQL Database Password: "))
 try:
     mydb = connect(
         host="localhost",
