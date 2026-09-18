@@ -13,7 +13,7 @@ except ImportError:
     from typing_extensions import Literal
 from datetime import date as _datetimedate
 
-_pass = str(input("Enter MySQL Database Password: "))
+_pass = "root" or ""#str(input("Enter MySQL Database Password: "))
 try:
     mydb = connect(
         host="localhost",
@@ -36,6 +36,7 @@ NAMES OF TABLES USED IN THIS PROJECT ARE:-
 '''
 
 #--------------MISC--------------#
+
 class ticket:
     def __init__(self,
                  trainno:str,
@@ -168,7 +169,18 @@ class basic:
                     ):
         cu.execute(f'select {type} from {name} where {where}')
         k = cu.fetchall()
-        return k  
+        return k 
+def gettime(train):
+        time = basic.getdatawhere('departure', 'schedules', f'train_number={train}')[0][0]
+        time = time.split(':')
+        if int(time[0]) < 12:
+            ap='am'
+            l = time[0]
+        else:
+            ap='pm'
+            l = str(int(time[0]) - 12)
+        time = l + ":" + time[1] + f' {ap}'
+        return time 
 #--------------MISC--------------#
 class user:
     def login(user: str, password: str):
@@ -910,6 +922,63 @@ class loginpage(tk.Frame):
                                                   y=60,
                                                   width=370,
                                                   height=320)
+                    book.trainname = tk.Label(book,
+                                              bg="#F8F3D9",
+                                              font="Consolas 10 bold",
+                                              anchor="w",
+                                              text=f"{_fin[t][1][0][0]}")
+                    book.trainname.place(
+                                              x=20,
+                                              y=70
+                                              )
+
+                    book.firstdep = tk.Label(book,
+                                              bg="#F8F3D9",
+                                            font="Consolas 10 bold",
+                                            anchor="w",
+                                            text=f"First Station Departure: {gettime(t)}")
+                    book.firstdep.place(
+                        x=20,
+                        y=90
+                    )
+                    book.cost = tk.Label(book,
+                                        bg="#F8F3D9",
+                                        font="Consolas 10 bold",
+                                        anchor="w",
+                                        text=f"Cost: ₹{_fin[t][0]['cost']}")
+                    book.cost.place(
+                        x=20,
+                        y=110
+                    )
+                    book.path = tk.Label(book,
+                                        bg="#F8F3D9",
+                                        font="Consolas 10 bold",
+                                        anchor="w",
+                                        text=f"Path: {fro} → {to}")
+                    book.path.place(
+                        x=20,
+                        y=150
+                    )
+                    book.trainno = tk.Label(book,
+                                           bg="#F8F3D9",
+                                           font="Consolas 10 bold",
+                                           anchor="w",
+                                           text=f"Train Number: {t}")
+                    book.trainno.place(
+                        x=20,
+                        y=130
+                    )
+                    tk.Label(book,
+                                    bd=1,
+                                    relief="sunken",
+                                    bg="black").place(x=20, y=170, width=360, height=5)
+
+                    def _updatecheck(nt):        
+                        update(nt)
+                        book.trainname.config(text=f"{_fin[nt][1][0][0]}")
+                        book.firstdep.config(text=f"First Station Departure: {gettime(nt)}")
+                        book.cost.config(text=f"Cost: ₹{_fin[nt][0]['cost']}")
+                        book.trainno.config(text=f"Train Number: {nt}")
                     def update(_t):
                         for widget in book.altoptframe.winfo_children():
                             widget.destroy()
@@ -988,9 +1057,9 @@ class loginpage(tk.Frame):
                                     height=20,
                                     width=70
                             )
-                    def _updatecheck(nt):        
-                        update(nt)
+
                     update(t)
+                    _updatecheck(t)
 
                     
                     """user = basic.getdatawhere('id', 'userlogin', f'log="{hex(uuid.getnode())}"')[0][0]
