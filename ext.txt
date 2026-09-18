@@ -1,0 +1,7 @@
+                if basic.getdatawhere('log', 'userlogin', f'log="{hex(uuid.getnode())}"') == []:
+                    mb.showerror(
+                        title="Error",
+                        message="Can't find user data\nTry Logging in!"
+                    )
+                    return False
+                else:

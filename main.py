@@ -13,7 +13,7 @@ except ImportError:
     from typing_extensions import Literal
 from datetime import date as _datetimedate
 
-_pass = str(input("Enter MySQL Database Password: "))
+_pass = "saransh2009"#str(input("Enter MySQL Database Password: "))
 try:
     mydb = connect(
         host="localhost",
@@ -811,13 +811,6 @@ class loginpage(tk.Frame):
                 
            
             def booktrain(t, fro, to):
-                if basic.getdatawhere('log', 'userlogin', f'log="{hex(uuid.getnode())}"') == []:
-                    mb.showerror(
-                        title="Error",
-                        message="Can't find user data\nTry Logging in!"
-                    )
-                    return False
-                else:
                     book = tk.Toplevel(self)
                     book.title("Booking Window")
                     book.geometry("675x400")
@@ -903,23 +896,108 @@ class loginpage(tk.Frame):
                     )
                     tk.Label(book, 
                             text="Alternate Trains",
-                            bg="#4EB4DD",
+                            bg="#F8F3D9",
                             font="Consolas 10 bold", 
                             anchor="c").place(
                                 x=400,
                                 y=60,
                                 width=_w
                                 )
+                    book.background = tk.Label(book,
+                                              bg="#F8F3D9",
+                                              borderwidth=0,).place(
+                                                  x=15,
+                                                  y=60,
+                                                  width=370,
+                                                  height=320)
+                    def update(_t):
+                        for widget in book.altoptframe.winfo_children():
+                            widget.destroy()
+                        
+                        im = Image.open("assets/altsearch.png")
+                        im = im.resize((_w-20, 100))
+                        book.ximg = ImageTk.PhotoImage(im)
+                        for train in _fin:
+                            if train == _t:
+                                continue
+                            altframe = tk.Frame(
+                                book.altoptframe,
+                                bd=2,
+                                relief='flat',
+                                width=_w-20,
+                                height=100,
+                                borderwidth=.5
+                            )
+                            altframe.pack(
+                                padx=5,
+                                pady=5
+                            )
+                            inl = tk.Label(
+                                altframe,
+                                image=book.ximg,
+                                padx=0,
+                                pady=0,
+                                borderwidth=.5,
+                                relief="flat").place(x=0,
+                                                    y=0)
+                            altframe.pack_propagate(False)
+                            tk.Label(
+                                altframe,
+                                text=f"Train No: {train}",
+                                bg=bgclr
+                            ).place(x=10,
+                                    y=30,
+                                    height=10
+                                )
+                            try:
+                                name=_fin[train][1][0][0]
+                            except:
+                                name="Name Not Found!"
+                            tk.Label(
+                                altframe,
+                                text=name,
+                                bg=bgclr
+                            ).place(x=10,
+                                    y=10,
+                                    height=15
+                                )
+                            time = basic.getdatawhere('departure', 'schedules', f'train_number={train}')[0][0]
+                            time = time.split(':')
+                            if int(time[0]) < 12:
+                                ap='am'
+                                l = time[0]
+                            else:
+                                ap='pm'
+                                l = str(int(time[0]) - 12)
+                            time = l + ":" + time[1] + f' {ap}'
+                            tk.Label(
+                                altframe,
+                                text=f"{time}",
+                                bg=bgclr
+                            ).place(x=10,
+                                    y=45,
+                                    height=15
+                            )
+                            tk.Button(
+                                altframe,
+                                text="Check",
+                                bg="#F8DF90",
+                                command=lambda train=train: _updatecheck(train)
+                            ).place(x=10,
+                                    y=67.5,
+                                    height=20,
+                                    width=70
+                            )
+                    def _updatecheck(nt):        
+                        update(nt)
+                    update(t)
 
-                    user = basic.getdatawhere('id', 'userlogin', f'log="{hex(uuid.getnode())}"')[0][0]
+                    
+                    """user = basic.getdatawhere('id', 'userlogin', f'log="{hex(uuid.getnode())}"')[0][0]
                     print('User ID:', user)
                     print('Train No:', t)
                     print('From:', fro)
-                    print('To:', to)
- 
-                
-                
-
+                    print('To:', to)"""
 
         limg = Image.open("assets/dawnbackground.png")
         limg = limg.resize((315,390))
