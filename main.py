@@ -19,17 +19,26 @@ import sys
 from tkinter import ttk
 
 load_dotenv()
-_pass = os.getenv("passone")# str(input("Enter MySQL Database Password: "))
+
 
 try:
+    _pass = os.getenv("passtwo")
     mydb = connect(
         host="localhost",
         user="root",
         passwd=_pass,
         database="TRAINS")
 except:
-    print("Error Connecting to Database!")
-    sys.exit()
+    try:
+        _pass = os.getenv("passone")
+        mydb = connect(
+            host="localhost",
+            user="root",
+            passwd=_pass,
+            database="TRAINS")
+    except:
+        print("Error Connecting to Database!")
+        sys.exit()
 db=mydb
 cu = mydb.cursor()
 
