@@ -12,8 +12,15 @@ try:
 except ImportError:
     from typing_extensions import Literal
 from datetime import date as _datetimedate
+import datetime as dt
+import os
+from dotenv import load_dotenv
+import sys
+from tkinter import ttk
 
-_pass = "root" or ""#str(input("Enter MySQL Database Password: "))
+load_dotenv()
+_pass = os.getenv("passone")# str(input("Enter MySQL Database Password: "))
+
 try:
     mydb = connect(
         host="localhost",
@@ -22,21 +29,11 @@ try:
         database="TRAINS")
 except:
     print("Error Connecting to Database!")
+    sys.exit()
 db=mydb
 cu = mydb.cursor()
 
-'''
-PARENT DATABASE -> TRAINS
-NAMES OF TABLES USED IN THIS PROJECT ARE:-
--> SCHEDULES - Schedules of all trains
--> STATIONS - List of all stations
--> TRAININFO - Information about all trains
--> USERLOGIN - User login information
--> ADMINLOGIN - Admin login details
-'''
-
 #--------------MISC--------------#
-
 class ticket:
     def __init__(self,
                  trainno:str,
@@ -50,7 +47,11 @@ class ticket:
         self.fromst = fromst
         self.tost = tost
 
-    def generate_ticket(self, get: Literal["create", "check"] = "create"):
+    def generate_ticket(self, 
+                        get: Literal["create", "check"] = "create", 
+                        _name:str=None, 
+                        _age:str=None,
+                        _gender:str=None):
         if self.uid==None and get == "create":
             mb.showerror(title="Error", 
                          message="User not specified!\n Try logging In.."
@@ -78,12 +79,18 @@ class ticket:
             actual = path[ind[0][0]:ind[1][0]+1]
             
             if get=="create":
+                if basic.getdatawhere("wallet", "userlogin", f"id={self.uid}")[0][0] < cost:
+                    mb.showerror(title="Error", message="Insufficient Balance!")
+                    return False
                 data = basic.getdatawhere(type="*", name="userlogin", where=f'id="{self.uid}"')[0]
                 cu.execute(f'update userlogin set wallet = {data[4] - cost} where id = "{self.uid}"')
                 db.commit()
 
             _iternary = {
                 'uid': self.uid,
+                'name':_name, 
+                'age':_age,
+                'gender':_gender,
                 'trainno': self.trainno,
                 'cost': cost,
                 'date': self.date.isoformat(),
@@ -103,6 +110,59 @@ class ticket:
             return True
         else:
             return False, mb.showerror(title="Err", message="Ticket Already Exists!")
+    
+    def multigenerate(self, 
+                      *args):
+        """
+        *Args:
+            0: name
+            1: age
+            2: gender
+        """
+        n = len(args)
+        x = basic.getdatawhere(type="*", name="trst", where=f"number='{self.trainno}'")[0]
+        path = x[1]
+        ind = []
+        cost = x[2]
+        if basic.getdatawhere("wallet", "userlogin", f"id={self.uid}")[0][0] < cost*n:
+            mb.showerror(title="Error", message="Insufficient Balance!")
+            return False
+        path = json.loads(path)
+        for i in path:
+            if self.fromst == i:
+                ind.append([path.index(i), i])
+            elif self.tost == i:
+                if ind!=[]:
+                    ind.append([path.index(i), i])
+                else:
+                    mb.showerror(title="Error", text="Invalid Sections Selected")
+        if len(ind) < 2:
+            mb.showerror(title="Error", text="Invalid Sections Selected")
+            print(ind)
+            return False
+        actual = path[ind[0][0]:ind[1][0]+1]
+        _iternary = {
+            'path':((ind[0][1], ind[1][1]), actual),
+            }
+        k=1
+        for i in args:
+            _iternary[f"{k}"] = {
+                'uid':self.uid,
+                'name':i[0],
+                'age':i[1],
+                'gender':i[2],
+                'trainno':self.trainno,
+                'cost':cost,
+                'date':self.date.isoformat()
+                }   
+            k+=1 
+        iternary=json.dumps(_iternary)
+        cu.execute('insert into ticketiternary values (%s, %s, %s)', (self.uid, self.trainno, iternary))
+        db.commit()
+        data = basic.getdatawhere(type="*", name="userlogin", where=f'id="{self.uid}"')[0]
+        cu.execute(f'update userlogin set wallet = {data[4] - (cost*n)} where id = "{self.uid}"')
+        db.commit()
+        return True
         
     def cancel_ticket(self):
         cu.execute(f'select * from ticketiternary where uid="{self.uid}" and trainno="{self.trainno}"')
@@ -823,6 +883,15 @@ class loginpage(tk.Frame):
                 
            
             def booktrain(t, fro, to):
+                if basic.getdatawhere('log', 'userlogin', f'log="{hex(uuid.getnode())}"') == []:
+                    mb.showerror(
+                        title="Error",
+                        message="Can't find user data\nTry Logging in!"
+                    )
+                    return False
+                else:
+                    user = basic.getdatawhere('id, name, email, wallet, phone', 'userlogin', f'log="{hex(uuid.getnode())}"')[0]
+                    print(user)
                     book = tk.Toplevel(self)
                     book.title("Booking Window")
                     book.geometry("675x400")
@@ -971,14 +1040,102 @@ class loginpage(tk.Frame):
                     tk.Label(book,
                                     bd=1,
                                     relief="sunken",
-                                    bg="black").place(x=20, y=170, width=360, height=5)
-
+                                    bg="black").place(x=20, 
+                                                      y=175, 
+                                                      width=360, 
+                                                      height=2)
+                    tk.Label(
+                        book,
+                        text="Boarding",
+                        font='consolas 10 bold',
+                        bg="#F8F3D9",).place(
+                            x=20,
+                            y=180
+                            )
+                    opt = ticket(t, fro, to).generate_ticket('check')['path'][1]
+                    opt = opt[0:-1]
+                    def getselect(event):
+                        selected_item = combo.get()
+                        return selected_item
+                    combo = ttk.Combobox(book,
+                                         values=opt,
+                                         state='readonly')
+                    combo.set(fro)
+                    combo.place(x=90, y=180, width=100)
+                    #x=20,y=210,width=360,height=140
+                    book.passe = tk.Frame(book)
+                    h_=130
+                    w_=360
+                    book.passe.place(
+                        x=20,
+                        y=210,
+                        width=w_,
+                        height=h_
+                        )
+                    book.passecanvas = tk.Canvas(
+                        book.passe,
+                        highlightthickness=0,
+                        bg="#fff3b3")
+                    book.passescrollbaar = tk.Scrollbar(
+                        book.passe,
+                        orient="vertical" ,
+                        command=book.passecanvas.yview   
+                    )
+                    book.passeframe = tk.Frame(
+                        book.passecanvas,
+                        bg="#fff3b3"
+                    )
+                    book.passeframe.bind(
+                        "<Configure>",
+                        lambda e: book.passecanvas.configure(
+                            scrollregion=book.passecanvas.bbox("all")
+                        )
+                    )
+                    book.passecanvas.create_window(
+                        (0,0),
+                        window=book.passeframe,
+                        anchor="nw",
+                        width=w_-20
+                        )
+                    book.passecanvas.configure(
+                        yscrollcommand=book.passescrollbaar.set
+                    )
+                    book.passecanvas.place(
+                        x=0,
+                        y=0,
+                        width=w_-20,
+                        height=h_
+                    )
+                    book.passescrollbaar.place(
+                        x=w_-20,
+                        y=0,
+                        width=20,
+                        height=h_
+                    )
+                    book.passe.grid_rowconfigure(
+                        0,
+                        weight=1
+                    )
+                    book.passe.grid_columnconfigure(   
+                        0,
+                        weight=1
+                    )
+                    tk.Label(book,
+                             bg="blue").place(
+                                 x=20,
+                                 y=210+140,
+                                 width=360,
+                                 height=20)
                     def _updatecheck(nt):        
                         update(nt)
                         book.trainname.config(text=f"{_fin[nt][1][0][0]}")
                         book.firstdep.config(text=f"First Station Departure: {gettime(nt)}")
                         book.cost.config(text=f"Cost: ₹{_fin[nt][0]['cost']}")
                         book.trainno.config(text=f"Train Number: {nt}")
+                        nopt = ticket(nt, fro, to).generate_ticket('check')['path'][1]
+                        nopt = nopt[0:-1]
+                        combo.configure(values=nopt)
+                        combo.set(fro)
                     def update(_t):
                         for widget in book.altoptframe.winfo_children():
                             widget.destroy()
@@ -1061,12 +1218,6 @@ class loginpage(tk.Frame):
                     update(t)
                     _updatecheck(t)
 
-                    
-                    """user = basic.getdatawhere('id', 'userlogin', f'log="{hex(uuid.getnode())}"')[0][0]
-                    print('User ID:', user)
-                    print('Train No:', t)
-                    print('From:', fro)
-                    print('To:', to)"""
 
         limg = Image.open("assets/dawnbackground.png")
         limg = limg.resize((315,390))
@@ -1330,7 +1481,6 @@ class secondpage(tk.Frame):
         
         self.Label = tk.Label(self, text=self.controller.searched_train, font="Consolas 12 bold", bg="#00CCFF")
         self.Label.place(x=10, y=50)
-
 
 if __name__ == "__main__":
     def delete_win():
