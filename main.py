@@ -305,6 +305,8 @@ class user:
                  ):
         if name == "" or password == "" or confirm_password == "" or phone == "" or email == "":
             return False, mb.showerror("Error", "Details Missing")
+        if "@" not in email:
+            return False, mb.showerror("Error", "Invalid Email!")
         cu.execute('Select * from userlogin')
         checkdata = cu.fetchall()
         if len(phone) != 10: 
@@ -1063,7 +1065,7 @@ class loginpage(tk.Frame):
                             )
                     opt = ticket(t, fro, to).generate_ticket('check')['path'][1]
                     opt = opt[0:-1]
-                    def getselect(event):
+                    def getselect():
                         selected_item = combo.get()
                         return selected_item
                     combo = ttk.Combobox(book,
@@ -1071,9 +1073,14 @@ class loginpage(tk.Frame):
                                          state='readonly')
                     combo.set(fro)
                     combo.place(x=90, y=180, width=100)
+                    def changecombopath(event, combo=combo, path_label=book.path, to=to):
+                        nfro = combo.get()
+                        path_label.config(text=f"Path: {nfro} → {to}")
+
+                    combo.bind("<<ComboboxSelected>>", changecombopath)
                     #x=20,y=210,width=360,height=140
                     book.passe = tk.Frame(book)
-                    h_=130
+                    h_=140
                     w_=360
                     book.passe.place(
                         x=20,
@@ -1130,11 +1137,24 @@ class loginpage(tk.Frame):
                         weight=1
                     )
                     tk.Label(book,
-                             bg="blue").place(
+                             bg="grey").place(
                                  x=20,
                                  y=210+140,
                                  width=360,
                                  height=20)
+                    book.add_img = tk.PhotoImage(file="assets/addbtn.png")
+                    btn = tk.Button(
+                        book,
+                        image=book.add_img,
+                        highlightthickness=0,
+                        bd=0
+                    )
+                    btn.place(
+                        x=21,
+                        y=351,
+                        height=19,
+                        width=19
+                    )
                     def _updatecheck(nt):        
                         update(nt)
                         book.trainname.config(text=f"{_fin[nt][1][0][0]}")
@@ -1145,6 +1165,7 @@ class loginpage(tk.Frame):
                         nopt = nopt[0:-1]
                         combo.configure(values=nopt)
                         combo.set(fro)
+                        book.path.config(text=f"Path: {fro} → {to}")
                     def update(_t):
                         for widget in book.altoptframe.winfo_children():
                             widget.destroy()
@@ -1499,7 +1520,8 @@ if __name__ == "__main__":
                 user.logout(i[0])
         app.destroy()
     app = mainwindow()
-    app.protocol('WM_DELETE_WINDOW',
+    app.protocol(
+                'WM_DELETE_WINDOW',
                  delete_win
                 )
     app.mainloop()
