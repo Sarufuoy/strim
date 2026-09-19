@@ -42,7 +42,7 @@ except:
 db=mydb
 cu = mydb.cursor()
 
-#--------------MISC--------------#
+
 class ticket:
     def __init__(self,
                  trainno:str,
@@ -250,7 +250,7 @@ def gettime(train):
             l = str(int(time[0]) - 12)
         time = l + ":" + time[1] + f' {ap}'
         return time 
-#--------------MISC--------------#
+
 class user:
     def login(user: str, password: str):
         current_device = hex(uuid.getnode())
@@ -544,7 +544,7 @@ class loginpage(tk.Frame):
             "<FocusOut>",
             lambda event: self.hide_dropdown(self.optionslist, None))
 
-        #--------TRAIN SEARCH--------#
+
         self.resultscontainer = tk.Frame(self)
         _h=285
         self.resultscontainer.place(
