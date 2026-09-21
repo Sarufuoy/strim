@@ -5,3 +5,18 @@
                     )
                     return False
                 else:
+
+
+
+self.maillabel = tk.Label(self, text="Email: " + mail, font="Consolas 10", anchor="w", bg=bgclr)
+self.maillabel.place(x=570, y=185, width=235)
+self.upcomingjourneys = tk.Label(self, text="Upcoming Journeys: ", borderwidth=0, font="Consolas 10", 
+                                anchor="w", bg=bgclr, 
+                                relief="solid")
+self.upcomingjourneys.place(x=570, y=210, width=235, height=20)
+self.journeyslist = tk.Listbox(self, font="Consolas 10", 
+                            relief="solid", 
+                            highlightthickness=0,
+                            activestyle='dotbox',
+                            bg=bgclr)
+self.journeyslist.place(x=570, y=230, width=235, height=155)

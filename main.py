@@ -484,8 +484,6 @@ class loginpage(tk.Frame):
 
         self.toentry = tk.Entry(self)
         self.toentry.place(x=230, y=115, width=115, height=20)
-        #335,115, 100, 20
-        #230, 115, 20, 115
         self.searchbtn = tk.Button(self, 
                                    text="Search Trains", 
                                    relief="raised", 
@@ -1607,35 +1605,48 @@ Note:  This can't be undone!
             uid=f[0][5]
             wallet=f[0][4]
             bgclr = "#F7F4ED"
-            self.namelabel=tk.Label(self, text="Welcome, " + name.capitalize(), font="Consolas 12 bold", anchor="w", bg=bgclr)
-            self.namelabel.place(x=570, y=130, width=235)
-            self.uidlabel = tk.Label(self, text="Unique User ID: " + str(uid), font="Consolas 10", anchor="w", bg=bgclr)
-            self.uidlabel.place(x=570, y=160, width=235)
-            self.maillabel = tk.Label(self, text="Email: " + mail, font="Consolas 10", anchor="w", bg=bgclr)
-            self.maillabel.place(x=570, y=185, width=235)
-            self.upcomingjourneys = tk.Label(self, text="Upcoming Journeys: ", borderwidth=0, font="Consolas 10", 
-                                            anchor="w", bg=bgclr, 
-                                            relief="solid")
-            self.upcomingjourneys.place(x=570, y=210, width=235, height=20)
-            self.journeyslist = tk.Listbox(self, font="Consolas 10", 
-                                        relief="solid", 
-                                        highlightthickness=0,
-                                        activestyle='dotbox',
-                                        bg=bgclr)
-            self.journeyslist.place(x=570, y=230, width=235, height=155)
-            
+            self.namelabel=tk.Label(self, text="Welcome, " + name.capitalize(), font="Consolas 12 bold", anchor="w", bg="#C7C4D9")
+            self.namelabel.place(x=570, y=105, width=235)
+            self.uidlabel = tk.Label(
+                self,
+                text=f"UID: {uid}\nWallet: ₹{wallet}/-",
+                font=("Consolas", 10),
+                anchor="nw",
+                justify="left",
+                bg="#F2C0BF",
+                padx=0,
+                pady=0,
+                borderwidth=0,
+                highlightthickness=0
+            )
+            self.uidlabel.place(x=570, y=160, width=235, height=110)
             
             self.refreshbtn = tk.Button(self, text="Refresh", command=lambda: print("Refresh Clicked"), bg="#D0DBA9") #command=lambda: refreshcmd())
             self.refreshbtn.place(x=570, y=400, width=116)
 
             self.logoutbtn=tk.Button(self, text="Logout", bg="#D0DBA9")#, command=lambda: logoutcmd())
             self.logoutbtn.place(x=689, y=400, width=116)
+        def updatelogdata(event):
+            try:
+                f=basic.getdatawhere(type="*",name="userlogin",where=f"log='{hex(uuid.getnode())}'")
+                if f != []:
+                    name=f[0][0]
+                    mob=f[0][2]
+                    mail=f[0][3]
+                    uid=f[0][5]
+                    wallet=f[0][4]
+                    self.uidlabel.config(text=f"UID: {uid}\nWallet: ₹{wallet}/-")
+            except Exception as e:
+                raise e
+        self.bind_all("<Key>",lambda event: updatelogdata(event))
+        self.bind_all("<Button>",lambda event: updatelogdata(event))
+           
             
         def logbtncmd():
             success = loginuser(
                 self.username.get_value(),
                 self.password.get_value()
-            )
+            )    
 
             if success:
                 updateuserdata("login")
