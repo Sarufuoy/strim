@@ -1076,7 +1076,17 @@ class loginpage(tk.Frame):
                     def changecombopath(event, combo=combo, path_label=book.path, to=to):
                         nfro = combo.get()
                         path_label.config(text=f"Path: {nfro} → {to}")
-
+                    book.passengers = tk.Label(
+                        book,
+                        text="No of Passengers: 0",
+                        font="consolas 10 bold",
+                        bg = "#F8F3D9"
+                    )
+                    book.passengers.place(
+                        x=220,
+                        y=180,
+                        height=20
+                    )
                     combo.bind("<<ComboboxSelected>>", changecombopath)
                     #x=20,y=210,width=360,height=140
                     book.passe = tk.Frame(book)
@@ -1137,24 +1147,281 @@ class loginpage(tk.Frame):
                         weight=1
                     )
                     tk.Label(book,
-                             bg="grey").place(
+                             bg="#313338").place(
                                  x=20,
-                                 y=210+140,
+                                 y=350,
                                  width=360,
-                                 height=20)
-                    book.add_img = tk.PhotoImage(file="assets/addbtn.png")
+                                 height=21)
+                    book.totalcost = tk.Label(
+                        book,
+                        text="Total Cost: ₹0",
+                        font="consolas 10 bold",
+                        bg = "#313338",
+                        fg='#FFFFFF'
+                    )
+                    book.totalcost.place(
+                        x=100,
+                        y=350
+                    )
+                    book.add_img = tk.PhotoImage(file="assets/pass/add.png")
                     btn = tk.Button(
                         book,
                         image=book.add_img,
                         highlightthickness=0,
-                        bd=0
+                        bd=0,
+                        command=lambda: addpass()
                     )
+                    multi_ticket_entry = []
+                    def addpass():
+                        optframe = tk.Frame(
+                            book.passeframe,
+                            bd=2,
+                            relief="flat",
+                            width=w_-20,
+                            height=100,
+                            borderwidth=.5
+                        )
+                        optframe.pack(
+                            padx=5,
+                            pady=5
+                        )
+                        optframe.bgimg = tk.PhotoImage(file="assets/gender/base.png")
+                        tk.Label(
+                            optframe,
+                            image=optframe.bgimg,
+                            padx=0,
+                            pady=0,
+                            borderwidth=.5,
+                            relief='flat'
+                        ).place(x=0,
+                                y=0)
+                        optframe.pack_propagate(False)
+                        optframe.delbtnimg = tk.PhotoImage(file="assets/pass/deletebtn.png")
+                        delete_btn = tk.Button(
+                            optframe,
+                            image=optframe.delbtnimg,
+                            command=lambda: optframe.destroy(),
+                            relief='flat'
+                        )
+                        delete_btn.place(
+                            x=310,
+                            y=80,
+                            height=11,
+                            width=11,
+                        )
+                        name = tkmisc.PlaceholderEntry(
+                            optframe,
+                            placeholder="Name of Passenger*",
+                        )
+                        name.place(
+                            x=10,
+                            y=10,
+                            width=160,
+                            height=20
+                        )
+                        gens = ['Male', 'Female', 'Other']
+                        gencombo = ttk.Combobox(
+                            optframe,
+                            values=gens,
+                            state='readonly'
+                        )
+                        gencombo.set('Gender*')
+                        gencombo.place(
+                            x=250,
+                            y=10,
+                            width=70,
+                            height=20
+                        )
+                        age=[]
+                        for i in range(5, 150):
+                            age.append(str(i))
+                        agecombo = ttk.Combobox(
+                            optframe,
+                            values=age,
+                            state='readonly'
+                        )
+                        agecombo.set('Age*')
+                        agecombo.place(
+                            x=180,
+                            y=10,
+                            width=60,
+                            height=20
+                        )
+                        tk.Label(
+                            optframe,
+                            text=f"{user[0]}",
+                            bg="#FFD666",
+                        ).place(x=10, 
+                                y=80,
+                                height=10,
+                            )
+                        tk.Label(
+                            optframe,
+                            text="Class",
+                            bg="#FFD666",
+                        ).place(
+                            x=10,
+                            y=40,
+                            height=10
+                        )
+                        classcomb = ttk.Combobox(
+                            optframe,
+                            values=['General'],
+                            state='readonly'
+                        )
+                        classcomb.set('General')
+                        classcomb.place(
+                            x=10,
+                            y=55,
+                            width=70,
+                            height=20
+                        )
+                        tk.Label(
+                            optframe,
+                            text="Seat",
+                            bg="#FFD666",
+                        ).place(
+                            x=100,
+                            y=40,
+                            height=10
+                        )
+                        seatcombo = ttk.Combobox(
+                            optframe,
+                            values=['None'],
+                            state='readonly'
+                        )
+                        seatcombo.set('None')
+                        seatcombo.place(
+                            x=100,
+                            y=55,
+                            width=70,
+                            height=20
+                        )
+                        confirmbtn = tk.Button(
+                            optframe,
+                            text="Confirm Passenger",
+                            bg="#D0F890",
+                            command=lambda: confirmpassenger(),
+                            anchor='c',
+                            relief='raised'
+                        )
+                        confirmbtn.place(
+                            x=180,
+                            y=40,
+                            height=34,
+                            width=140
+                        )
+                        def confirmpassenger():
+                            if name.get_value() == "" or agecombo.get() == "Age*" or gencombo.get() == "Gender*":
+                                mb.showerror(
+                                    title="Error",
+                                    message="Please fill all the Necessary fields"
+                                )
+                                return False
+                            resp = mb.askyesno(
+                                title="Confirm Passenger",
+                                message=f"""Are you sure you want to add this passenger?
+
+Name: {name.get_value()}
+Age: {agecombo.get()}
+Gender: {gencombo.get()}
+Class: {classcomb.get()}
+Seat: {seatcombo.get()}
+
+Note:  This can't be undone!
+                                """
+                            )
+                            if resp:
+                                pass
+                            else:
+                                return False
+                            det = (name.get_value(), 
+                                   agecombo.get(), 
+                                   gencombo.get())
+                            print(det)
+                            multi_ticket_entry.append(det)
+                            print(multi_ticket_entry)
+                            for child in optframe.winfo_children():
+                                try:
+                                    child.configure(state="disabled")
+                                except:
+                                    pass
+                            cost = book.cost.cget("text").split("₹")[1]
+                            cost = int(cost)
+                            book.totalcost.config(text=f"Total Cost: ₹{cost*len(multi_ticket_entry)}")
+                            book.passengers.config(text=f"No of Passengers: {len(multi_ticket_entry)}")
                     btn.place(
                         x=21,
                         y=351,
                         height=19,
-                        width=19
                     )
+                    book.finalconfirm = tk.Button(
+                        book,
+                        text="Checkout",
+                        bg="#D0F890",
+                        command=lambda: confirmticket(),
+                        anchor='c',
+                        relief='flat'
+                    )
+                    book.finalconfirm.place(
+                        x=270,
+                        y=351,
+                        height=19,
+                        width=109
+                    )
+                    def confirmticket():
+                        if len(multi_ticket_entry) == 0:
+                            mb.showerror(
+                                title="Error",
+                                message="No Passengers Selected"
+                            )
+                            return False
+                        else:
+                            uid = basic.getdatawhere('id', 'userlogin', f'log="{hex(uuid.getnode())}"')[0][0]
+                            wallet = basic.getdatawhere('wallet', 'userlogin', f'id={uid}')[0][0]
+                            cost = book.totalcost.cget("text").split("₹")[1]
+                            cost = int(cost)
+                            if wallet < cost*len(multi_ticket_entry):
+                                mb.showerror(
+                                    title="Error",
+                                    message="Insufficient Balance"
+                                )
+                                return False
+                            else:
+                                confirm = mb.askyesno(
+                                    title="Confirm",
+                                    message=f"""Are you sure you want to buy this ticket?
+
+Total Cost: ₹{cost*len(multi_ticket_entry)}
+Trainno: {book.trainno.cget("text").split(": ")[1]}
+Current Wallet Balance: ₹{wallet}
+
+Note:  This can't be undone!
+""")
+                                if confirm:
+                                    try:
+                                        proc = ticket(
+                                            trainno=book.trainno.cget("text").split(": ")[1],
+                                            fromst=combo.get(),
+                                            tost=to,
+                                            uid=uid
+                                            )
+                                        proc.multigenerate(*tuple(multi_ticket_entry))
+                                        mb.showinfo(
+                                            title="Success",
+                                            message="Ticket Generated!\nHave a Great Journey!"
+                                        )
+                                        book.destroy()
+                                        print("Ticket Generated")
+                                        return True
+                                    except Exception as e:
+                                        mb.showerror(
+                                            title="Error",
+                                            message="Invalid Stations Selected"
+                                        )
+                                        raise e
+                                else:
+                                    return False
                     def _updatecheck(nt):        
                         update(nt)
                         book.trainname.config(text=f"{_fin[nt][1][0][0]}")
@@ -1166,6 +1433,9 @@ class loginpage(tk.Frame):
                         combo.configure(values=nopt)
                         combo.set(fro)
                         book.path.config(text=f"Path: {fro} → {to}")
+                        cost = book.cost.cget("text").split("₹")[1]
+                        cost = int(cost)
+                        book.totalcost.config(text=f"Total Cost: ₹{cost*len(multi_ticket_entry)}")
                     def update(_t):
                         for widget in book.altoptframe.winfo_children():
                             widget.destroy()
@@ -1242,11 +1512,12 @@ class loginpage(tk.Frame):
                             ).place(x=10,
                                     y=67.5,
                                     height=20,
-                                    width=70
+                                    width=_w-50
                             )
 
                     update(t)
                     _updatecheck(t)
+                    addpass()
 
 
         limg = Image.open("assets/dawnbackground.png")
@@ -1334,6 +1605,7 @@ class loginpage(tk.Frame):
             mob=f[0][2]
             mail=f[0][3]
             uid=f[0][5]
+            wallet=f[0][4]
             bgclr = "#F7F4ED"
             self.namelabel=tk.Label(self, text="Welcome, " + name.capitalize(), font="Consolas 12 bold", anchor="w", bg=bgclr)
             self.namelabel.place(x=570, y=130, width=235)
