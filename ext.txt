@@ -1,22 +1,65 @@
-                if basic.getdatawhere('log', 'userlogin', f'log="{hex(uuid.getnode())}"') == []:
-                    mb.showerror(
-                        title="Error",
-                        message="Can't find user data\nTry Logging in!"
-                    )
+    def generate_ticket(self, 
+                        get: Literal["create", "check"] = "create", 
+                        _name:str=None, 
+                        _age:str=None,
+                        _gender:str=None):
+        if self.uid==None and get == "create":
+            mb.showerror(title="Error", 
+                         message="User not specified!\n Try logging In.."
+            )
+            return False
+        data=basic.getdatawhere("iternary", "ticketiternary", f"uid={self.uid} and trainno={self.trainno}")
+        if data==[]:
+            x = basic.getdatawhere(type="*", name="trst", where=f"number='{self.trainno}'")[0]
+            path=x[1]
+            ind = []
+            cost=x[2]
+            path=json.loads(path)
+            for i in path:
+                if self.fromst == i:
+                    ind.append([path.index(i), i])
+                elif self.tost == i:
+                    if ind != []:
+                        ind.append([path.index(i), i])
+                    else:
+                        mb.showerror(title="Error", message="Invalid Stations Selected.")
+            if len(ind) < 2:
+                mb.showerror(title="Error", message="Invalid Stations Selected.")
+                print(ind)
+                return False
+            actual = path[ind[0][0]:ind[1][0]+1]
+            
+            if get=="create":
+                if basic.getdatawhere("wallet", "userlogin", f"id={self.uid}")[0][0] < cost:
+                    mb.showerror(title="Error", message="Insufficient Balance!")
                     return False
-                else:
-
-
-
-self.maillabel = tk.Label(self, text="Email: " + mail, font="Consolas 10", anchor="w", bg=bgclr)
-self.maillabel.place(x=570, y=185, width=235)
-self.upcomingjourneys = tk.Label(self, text="Upcoming Journeys: ", borderwidth=0, font="Consolas 10", 
-                                anchor="w", bg=bgclr, 
-                                relief="solid")
-self.upcomingjourneys.place(x=570, y=210, width=235, height=20)
-self.journeyslist = tk.Listbox(self, font="Consolas 10", 
-                            relief="solid", 
-                            highlightthickness=0,
-                            activestyle='dotbox',
-                            bg=bgclr)
-self.journeyslist.place(x=570, y=230, width=235, height=155)
+                data = basic.getdatawhere(type="*", name="userlogin", where=f'id="{self.uid}"')[0]
+                cu.execute(f'update userlogin set wallet = {data[4] - cost} where id = "{self.uid}"')
+                db.commit()
+            ticd = random.randint(100000000, 999999999)
+            _iternary = {
+                'uid': self.uid,
+                'name':_name, 
+                'age':_age,
+                'gender':_gender,
+                'trainno': self.trainno,
+                'cost': cost,
+                'date': self.date.isoformat(),
+                'path': ((ind[0][1], ind[1][1]), actual),
+                'tid':ticd,
+                }
+            iternary = json.dumps(_iternary)
+            if get=="create":
+                cu.execute('insert into ticketiternary values (%s, %s, %s)', (self.uid, self.trainno, iternary))
+                db.commit()
+            else:
+                _iternary = {
+                    'trainno':self.trainno,
+                    'path':((ind[0][1], ind[1][1]), actual),
+                    'cost':cost
+                }
+                return _iternary
+            return True
+        else:
+            return False, mb.showerror(title="Err", message="Ticket Already Exists!")
+    

@@ -17,6 +17,9 @@ import os
 from dotenv import load_dotenv
 import sys
 from tkinter import ttk
+from tkcalendar import DateEntry
+from datetime import date
+from dateutil.relativedelta import relativedelta
 
 load_dotenv()
 
@@ -57,70 +60,34 @@ class ticket:
         self.tost = tost
 
     def generate_ticket(self, 
-                        get: Literal["create", "check"] = "create", 
-                        _name:str=None, 
-                        _age:str=None,
-                        _gender:str=None):
-        if self.uid==None and get == "create":
-            mb.showerror(title="Error", 
-                         message="User not specified!\n Try logging In.."
-            )
-            return False
-        data=basic.getdatawhere("iternary", "ticketiternary", f"uid={self.uid} and trainno={self.trainno}")
-        if data==[]:
-            x = basic.getdatawhere(type="*", name="trst", where=f"number='{self.trainno}'")[0]
-            path=x[1]
-            ind = []
-            cost=x[2]
-            path=json.loads(path)
-            for i in path:
-                if self.fromst == i:
-                    ind.append([path.index(i), i])
-                elif self.tost == i:
-                    if ind != []:
-                        ind.append([path.index(i), i])
-                    else:
-                        mb.showerror(title="Error", message="Invalid Stations Selected.")
-            if len(ind) < 2:
-                mb.showerror(title="Error", message="Invalid Stations Selected.")
-                print(ind)
-                return False
-            actual = path[ind[0][0]:ind[1][0]+1]
-            
-            if get=="create":
-                if basic.getdatawhere("wallet", "userlogin", f"id={self.uid}")[0][0] < cost:
-                    mb.showerror(title="Error", message="Insufficient Balance!")
-                    return False
-                data = basic.getdatawhere(type="*", name="userlogin", where=f'id="{self.uid}"')[0]
-                cu.execute(f'update userlogin set wallet = {data[4] - cost} where id = "{self.uid}"')
-                db.commit()
+                        get: Literal["create", "check"] = "create"):
 
-            _iternary = {
-                'uid': self.uid,
-                'name':_name, 
-                'age':_age,
-                'gender':_gender,
-                'trainno': self.trainno,
-                'cost': cost,
-                'date': self.date.isoformat(),
-                'path': ((ind[0][1], ind[1][1]), actual),
-                }
-            iternary = json.dumps(_iternary)
-            if get=="create":
-                cu.execute('insert into ticketiternary values (%s, %s, %s)', (self.uid, self.trainno, iternary))
-                db.commit()
-            else:
-                _iternary = {
-                    'trainno':self.trainno,
-                    'path':((ind[0][1], ind[1][1]), actual),
-                    'cost':cost
-                }
-                return _iternary
-            return True
-        else:
-            return False, mb.showerror(title="Err", message="Ticket Already Exists!")
-    
-    def multigenerate(self, 
+        x = basic.getdatawhere(type="*", name="trst", where=f"number='{self.trainno}'")[0]
+        path=x[1]
+        ind = []
+        cost=x[2]
+        path=json.loads(path)
+        for i in path:
+            if self.fromst == i:
+                ind.append([path.index(i), i])
+            elif self.tost == i:
+                if ind != []:
+                    ind.append([path.index(i), i])
+                else:
+                    mb.showerror(title="Error", message="Invalid Stations Selected.")
+        if len(ind) < 2:
+            mb.showerror(title="Error", message="Invalid Stations Selected.")
+            print(ind)
+            return False
+        actual = path[ind[0][0]:ind[1][0]+1]
+        _iternary = {
+            'trainno':self.trainno,
+            'path':((ind[0][1], ind[1][1]), actual),
+            'cost':cost
+        }
+        return _iternary
+    def multigenerate(self,
+                      dte, 
                       *args):
         """
         *Args:
@@ -150,6 +117,11 @@ class ticket:
             print(ind)
             return False
         actual = path[ind[0][0]:ind[1][0]+1]
+        ticd = 0
+        for i in range(999999999):
+            ticd = random.randint(100000000, 999999999)
+            if basic.getdatawhere("tid", 'ticketiternary', f'tid={ticd}') == []:
+                break
         _iternary = {
             'path':((ind[0][1], ind[1][1]), actual),
             }
@@ -162,30 +134,41 @@ class ticket:
                 'gender':i[2],
                 'trainno':self.trainno,
                 'cost':cost,
-                'date':self.date.isoformat()
                 }   
             k+=1 
         iternary=json.dumps(_iternary)
-        cu.execute('insert into ticketiternary values (%s, %s, %s)', (self.uid, self.trainno, iternary))
+        dtx = str(date.isoformat(dte))
+        cu.execute('insert into ticketiternary values (%s, %s, %s, %s, %s)', (self.uid, self.trainno, iternary,ticd, dtx))
         db.commit()
         data = basic.getdatawhere(type="*", name="userlogin", where=f'id="{self.uid}"')[0]
         cu.execute(f'update userlogin set wallet = {data[4] - (cost*n)} where id = "{self.uid}"')
         db.commit()
         return True
         
-    def cancel_ticket(self):
-        cu.execute(f'select * from ticketiternary where uid="{self.uid}" and trainno="{self.trainno}"')
+    def cancel_ticket(self, ticket_id):
+        cu.execute(f'select * from ticketiternary where tid="{ticket_id}" and trainno="{self.trainno}"')
         data = cu.fetchall()
+        cuid = basic.getdatawhere(type="id", name="userlogin", where=f"log='{hex(uuid.getnode())}'")[0][0]
         if data==[]:
             return False, mb.showerror(title="Error", message="No Data Found!")
         else:
-            d = data[0][2]
-            d = json.loads(d)
-            cost = d['cost']
-            cost = random.randrange(cost, cost-100, -10)
-            up = basic.getdatawhere("wallet", 'userlogin', f'id={self.uid}')[0][0] + cost
-            cu.execute(f'Update userlogin set wallet={up} where id={self.uid}')
-            cu.execute(f"delete from ticketiternary where uid={self.uid}")
+            cost = basic.getdatawhere(type="cost", name="trst", where=f"number='{self.trainno}'")[0][0]
+            cost = 0.3*cost
+            resp = mb.askyesno(
+                title="Confirm",
+                message=f"""Are you sure you want to cancel this ticket?
+
+Refund Amount: ₹{cost}
+
+Note:  This can't be undone!"""
+            )
+            if resp:
+                pass
+            else:
+                return False
+            up = basic.getdatawhere("wallet", 'userlogin', f'id={cuid}')[0][0] + cost
+            cu.execute(f'Update userlogin set wallet={up} where id={cuid}')
+            cu.execute(f"delete from ticketiternary where uid={cuid}")
             db.commit()
             return True, mb.showinfo(title="Done!", message=f"Your ticket has been cancelled!\nRefund Amount: {cost}")
     
@@ -278,9 +261,6 @@ class user:
                 "Error",
                 "Already Running Another Instance!")
             return False
-
-        print(stored_device)
-        print(current_device)
         
         cu.execute(
             'UPDATE userlogin SET log = %s WHERE name = %s',
@@ -1034,8 +1014,8 @@ class loginpage(tk.Frame):
                                         anchor="w",
                                         text=f"Path: {fro} → {to}")
                     book.path.place(
-                        x=20,
-                        y=150
+                        x=220,
+                        y=130
                     )
                     book.trainno = tk.Label(book,
                                            bg="#F8F3D9",
@@ -1050,7 +1030,7 @@ class loginpage(tk.Frame):
                                     bd=1,
                                     relief="sunken",
                                     bg="black").place(x=20, 
-                                                      y=175, 
+                                                      y=150, 
                                                       width=360, 
                                                       height=2)
                     tk.Label(
@@ -1059,8 +1039,28 @@ class loginpage(tk.Frame):
                         font='consolas 10 bold',
                         bg="#F8F3D9",).place(
                             x=20,
-                            y=180
+                            y=160
                             )
+                    today = date.today()
+                    max_date = today + relativedelta(months=2)
+                    tk.Label(
+                        book,
+                        text="Date Of Journey: ",
+                        font='consolas 10 bold',
+                        bg="#F8F3D9",
+                    ).place(
+                        x=90, y=180
+                    )
+                    date_entry = DateEntry(
+                        book,
+                        date_pattern="dd/mm/yyyy",
+                        mindate=today,
+                        maxdate=max_date
+                    )
+                    date_entry.place(
+                        x=220,
+                        y=180
+                    )
                     opt = ticket(t, fro, to).generate_ticket('check')['path'][1]
                     opt = opt[0:-1]
                     def getselect():
@@ -1070,7 +1070,7 @@ class loginpage(tk.Frame):
                                          values=opt,
                                          state='readonly')
                     combo.set(fro)
-                    combo.place(x=90, y=180, width=100)
+                    combo.place(x=90, y=160, width=100)
                     def changecombopath(event, combo=combo, path_label=book.path, to=to):
                         nfro = combo.get()
                         path_label.config(text=f"Path: {nfro} → {to}")
@@ -1082,11 +1082,10 @@ class loginpage(tk.Frame):
                     )
                     book.passengers.place(
                         x=220,
-                        y=180,
+                        y=160,
                         height=20
                     )
                     combo.bind("<<ComboboxSelected>>", changecombopath)
-                    #x=20,y=210,width=360,height=140
                     book.passe = tk.Frame(book)
                     h_=140
                     w_=360
@@ -1339,6 +1338,7 @@ Note:  This can't be undone!
                             print(det)
                             multi_ticket_entry.append(det)
                             print(multi_ticket_entry)
+                            optframe.disabled = True
                             for child in optframe.winfo_children():
                                 try:
                                     child.configure(state="disabled")
@@ -1368,6 +1368,27 @@ Note:  This can't be undone!
                         width=109
                     )
                     def confirmticket():
+                        disabled = 0
+                        enabled = 0
+
+                        for child in book.passeframe.winfo_children():
+                            if getattr(child, "disabled", False):
+                                disabled += 1
+                            else:
+                                enabled += 1
+
+                        if enabled == 0:
+                            pass
+                        elif enabled != 0:
+                            conf = mb.askyesno(
+                                title="Are you sure?",
+                                message=f"""You have {enabled} not selected passengers
+Do you want to Continue?"""
+                            )
+                            if conf:
+                                pass
+                            else:
+                                return False
                         if len(multi_ticket_entry) == 0:
                             mb.showerror(
                                 title="Error",
@@ -1404,7 +1425,7 @@ Note:  This can't be undone!
                                             tost=to,
                                             uid=uid
                                             )
-                                        proc.multigenerate(*tuple(multi_ticket_entry))
+                                        proc.multigenerate(date_entry.get_date(),*tuple(multi_ticket_entry))
                                         mb.showinfo(
                                             title="Success",
                                             message="Ticket Generated!\nHave a Great Journey!"
@@ -1605,11 +1626,13 @@ Note:  This can't be undone!
             uid=f[0][5]
             wallet=f[0][4]
             bgclr = "#F7F4ED"
-            self.namelabel=tk.Label(self, text="Welcome, " + name.capitalize(), font="Consolas 12 bold", anchor="w", bg="#C7C4D9")
+            self.namelabel=tk.Label(self, text="Welcome, " + name.capitalize().split(" ")[0], font="Consolas 15 bold", anchor="w", bg="#C7C4D9")
             self.namelabel.place(x=570, y=105, width=235)
             self.uidlabel = tk.Label(
                 self,
-                text=f"UID: {uid}\nWallet: ₹{wallet}/-",
+                text=f"""UID: {uid}
+Email: {mail}
+Mobile No.: {mob}""",
                 font=("Consolas", 10),
                 anchor="nw",
                 justify="left",
@@ -1619,14 +1642,123 @@ Note:  This can't be undone!
                 borderwidth=0,
                 highlightthickness=0
             )
-            self.uidlabel.place(x=570, y=160, width=235, height=110)
-            
-            self.refreshbtn = tk.Button(self, text="Refresh", command=lambda: print("Refresh Clicked"), bg="#D0DBA9") #command=lambda: refreshcmd())
-            self.refreshbtn.place(x=570, y=400, width=116)
-
-            self.logoutbtn=tk.Button(self, text="Logout", bg="#D0DBA9")#, command=lambda: logoutcmd())
-            self.logoutbtn.place(x=689, y=400, width=116)
+            self.walletlabel = tk.Label(
+                self,
+                text=f"Balance: ₹{wallet}/-",
+                font=("Consolas", 12, "bold"),
+                anchor="c",
+                justify="left",
+                bg="#75A2DB",
+                padx=0,
+                pady=0,
+                borderwidth=0,
+                highlightthickness=0
+            )
+            self.walletlabel.place(
+                x=570, 
+                y=210, 
+                width=235, 
+                height=30
+            )
+            self.uidlabel.place(
+                x=570, 
+                y=160, 
+                width=235, 
+                height=110
+            )
+            self.logoutbtn=tk.Button(
+                self, 
+                text="Logout", 
+                bg="#D0DBA9"
+            )#, command=lambda: logoutcmd())
+            self.logoutbtn.place(
+                x=689, 
+                y=400, 
+                width=116
+            )
+            tk.Label(
+                self,
+                bg="#C7C4D9",
+            ).place(
+                x=570,
+                y=240,
+                width=235,
+                height=155,
+            )
+            self.upcomingjourneyslabel = tk.Label(
+                self,
+                bg="#C7C4D9",
+                text="Upcoming Journeys",
+                font=("Consolas", 10, "bold"),
+                anchor="w",
+                justify="left"
+            ).place(
+                x=570,
+                y=240,
+                height=20
+            )
+            self.upcomingjourneys = tk.Frame(self)
+            wi = 235
+            hi = 135
+            self.upcomingjourneys.place(
+                x=570,
+                y=260,
+                width=235,
+                height=135
+            )
+            self.upcomingjourneyscanvas = tk.Canvas(
+                self.upcomingjourneys,
+                highlightthickness=0,
+                bg="#C7C4D9"
+            )
+            self.upcomingjourneyscrollbar = tk.Scrollbar(
+                self.upcomingjourneys,
+                orient="vertical",
+                command=self.upcomingjourneyscanvas.yview
+            )
+            self.upcomingjourneysframe = tk.Frame(
+                self.upcomingjourneyscanvas,
+                bg="#C7C4D9"
+            )
+            self.upcomingjourneysframe.bind(
+                "<Configure>",
+                lambda e: self.upcomingjourneyscanvas.configure(
+                    scrollregion=self.upcomingjourneyscanvas.bbox("all")
+                )
+            )
+            self.upcomingjourneyscanvas.create_window(
+                (0,0),
+                window=self.upcomingjourneysframe,
+                anchor="nw",
+                width=wi-20,
+            )
+            self.upcomingjourneyscanvas.configure(
+                yscrollcommand=self.upcomingjourneyscrollbar.set
+            )
+            self.upcomingjourneyscanvas.place(
+                x=0,
+                y=0,
+                width=wi-20,
+                height=hi
+            )
+            self.upcomingjourneyscrollbar.place(
+                x=wi-20,
+                y=0,
+                width=20,
+                height=hi
+            )
+            self.upcomingjourneys.grid_rowconfigure(
+                0,
+                weight=1
+            )
+            self.upcomingjourneys.grid_columnconfigure(   
+                0,
+                weight=1
+            )
+            self.ticket_widgets = {}
         def updatelogdata(event):
+            wi = 235
+            hi = 135
             try:
                 f=basic.getdatawhere(type="*",name="userlogin",where=f"log='{hex(uuid.getnode())}'")
                 if f != []:
@@ -1635,11 +1767,119 @@ Note:  This can't be undone!
                     mail=f[0][3]
                     uid=f[0][5]
                     wallet=f[0][4]
-                    self.uidlabel.config(text=f"UID: {uid}\nWallet: ₹{wallet}/-")
+                    self.walletlabel.config(text=f"Balance: ₹{wallet}/-")
+                ticketdata = basic.getdatawhere(type="*", name="ticketiternary", where=f"uid='{uid}'")
+                if ticketdata == []:
+                    return
+                for i in ticketdata:
+                    iternary = json.loads(i[2])
+                    tid = i[3]
+                    date = i[4]
+                    path = f"{iternary['path'][0][0]} - {iternary['path'][0][1]}"
+                    train = i[1]
+                    if tid in self.ticket_widgets:
+                        continue
+                    iternary = json.loads(i[2])
+                    ticketframe = tk.Frame(
+                        self.upcomingjourneysframe,
+                        bd=2,
+                        relief="flat",
+                        width=wi-20,
+                        height=100,
+                        borderwidth=.5,
+                        bg="#9FA6DA"
+                    )
+                    ticketframe.pack(
+                        padx=5,
+                        pady=5
+                    )
+                    nopas = 0
+                    for key, value in iternary.items():
+                        nopas += 1
+                    nopas = nopas - 1
+                    tk.Label(
+                        ticketframe,
+                        text=f"""Train No: {train}
+No Of Passengers: {nopas}
+Date of Journey: {date}
+Path: {path}""",
+                        bg="#9FA6DA",
+                        font="consolas 10 bold",
+                        anchor="w",
+                        justify="left"
+                    ).place(
+                        x=1,
+                        y=1
+                    )
+                    cancelbtn = tk.Button(
+                        ticketframe,
+                        text="Cancel",
+                        bg="#565B68",
+                        command=lambda tid=tid: cancelticket(tid)
+                    )
+                    cancelbtn.place(
+                        x=1,
+                        y=70,
+                        height=20,
+                        width=80
+                    )
+                    infobtn = tk.Button(
+                        ticketframe,
+                        text="Info",
+                        bg="#565B68",
+                        command=lambda tid=tid: ticketinfo(tid)
+                    )
+                    infobtn.place(
+                        x=87,
+                        y=70,
+                        height=20,
+                        width=113
+                    )
+                    self.ticket_widgets[tid] = ticketframe
+                    def ticketinfo(tid):
+                        inf = tk.Toplevel(self,)
+                        inf.title("Ticket Info")
+                        inf.geometry("400x200")
+                        inf.resizable(False, False)
+                        inf.grab_set()
+                        k=Image.open("assets/noonbackground.png")
+                        k=k.resize((400, 200))
+                        inf.inimg = ImageTk.PhotoImage(k)
+                        tk.Label(inf, image=inf.inimg,
+                                        padx=0,
+                                        pady=0,
+                                        borderwidth=0,
+                                        relief="flat",
+                                        highlightthickness=1,
+                                        highlightbackground="black",
+                                        ).place(
+                                            x=0,
+                                            y=0,
+                                            relwidth=1,
+                                            relheight=1
+                                        )
+                        tk.Label(
+                            inf,
+                            text=f"Train No: {train}",
+                            bg="#FFF0BE",
+                            font="courier 15 bold"
+                        )
+
+                    def cancelticket(tid):
+                        ticket_object = ticket(train,
+                                               iternary['path'][0][0],
+                                               iternary['path'][0][1])
+                        if ticket_object.cancel_ticket(tid):
+                            ticketframe.destroy()
+                            self.ticket_widgets.pop(tid)
+                    
+
             except Exception as e:
-                raise e
+                e = str(e)
+                if e=="local variable 'uid' referenced before assignment":pass
         self.bind_all("<Key>",lambda event: updatelogdata(event))
         self.bind_all("<Button>",lambda event: updatelogdata(event))
+        self.bind_all("<Motion>", lambda event: updatelogdata(event))
            
             
         def logbtncmd():
