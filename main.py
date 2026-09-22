@@ -432,6 +432,7 @@ class loginpage(tk.Frame):
         img = img.resize((900, 39))
 
         self.titleimg = ImageTk.PhotoImage(img)
+        
 
         self.title = tk.Label(self, image = self.titleimg,
                               padx=0,
@@ -442,6 +443,7 @@ class loginpage(tk.Frame):
                               highlightbackground="black",
                               )
         self.title.place(x=0, y=0)
+
 
         simg = Image.open('assets/dawnbackground.png')
         simg = simg.resize((450, 390))
@@ -1608,7 +1610,92 @@ Note:  This can't be undone!
                     message="Login Attempt Unsuccessful!"
                 )
                 return False
-        
+            
+        self.adminlogbtn = tk.Button(
+            self,
+            text="Admin Login",
+            bg="#313338",
+            fg="#FFFFFF",
+            command=lambda: adminlogin()
+        )
+        self.adminlogbtn.place(
+            x=600,
+            y=250,
+            width=175
+        )
+        def adminlogin():
+            pop = tk.Toplevel(self)
+            pop.title("Admin Login")
+            pop.geometry("700x500")
+            pop.resizable(False, False)
+            pop.grab_set()
+
+            tk.Label(
+                pop, 
+                bg="#1e2124",
+                relief="flat").place(
+                    x=0,
+                    y=0,
+                    height=500,
+                    width=700
+                )
+            ttimg = Image.open("assets/admin/title.png")
+            ttimg = ttimg.resize((700, 50))
+            pop.lbg = ImageTk.PhotoImage(ttimg)
+            tk.Label(
+                pop,
+                image=pop.lbg,
+                padx=0,
+                pady=0,
+                borderwidth=0,
+                relief="flat",
+                highlightthickness=1,
+                highlightbackground="black",
+                ).place(
+                    x=0,
+                    y=0,
+                )
+            border = tk.Frame(
+                pop,
+                bg="white",
+            )
+            border.place(
+                x=190,
+                y=150,
+                height=200,
+                width=300
+            )
+            tk.Label(
+                border,
+                bg="#424549"
+            ).place(
+                x=2,
+                y=2,
+                height=196,
+                width=296
+            )
+            tk.Label(
+                border,
+                text="Login as an Admin",
+                anchor="c"
+            ).place(
+                x=2,
+                y=10,
+                width=296
+            )
+            
+            for i in border.winfo_children():
+                try:
+                    i.configure(
+                        bg="#424549",
+                        fg="white"
+                    )
+                except:
+                    pass
+
+
+            
+            
         def updateuserdata(type: Literal["login", "register", "in"] = "register"):
             if type=="login":
                 test = basic.getdatawhere('name, password, log', 'userlogin', f'name="{self.username.get_value()}"')
@@ -1620,6 +1707,7 @@ Note:  This can't be undone!
             self.username.place_forget()
             self.password.place_forget()
             self.loginlb.place_forget()
+            self.adminlogbtn.place_forget()
             name=f[0][0]
             mob=f[0][2]
             mail=f[0][3]
@@ -1756,6 +1844,7 @@ Mobile No.: {mob}""",
                 weight=1
             )
             self.ticket_widgets = {}
+
             def updatelogdata():#event
                 wi = 235
                 hi = 135
@@ -2128,6 +2217,7 @@ Path: {path}""",
                                 borderwidth=.5,
                                 command=registerpopup)
         self.regbtn.place(x=600, y=220, width=175)
+
 
     def select_option(self, event, wid, li):
         selected_item = li.get(tk.ANCHOR)
