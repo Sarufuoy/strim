@@ -23,7 +23,6 @@ from dateutil.relativedelta import relativedelta
 
 load_dotenv()
 
-
 try:
     _pass = os.getenv("passtwo")
     mydb = connect(
@@ -62,7 +61,11 @@ class ticket:
     def generate_ticket(self, 
                         get: Literal["create", "check"] = "create"):
 
-        x = basic.getdatawhere(type="*", name="trst", where=f"number='{self.trainno}'")[0]
+        x = basic.getdatawhere(
+            type="*", 
+            name="trst", 
+            where=f"number='{self.trainno}'"
+        )[0]
         path=x[1]
         ind = []
         cost=x[2]
@@ -74,15 +77,25 @@ class ticket:
                 if ind != []:
                     ind.append([path.index(i), i])
                 else:
-                    mb.showerror(title="Error", message="Invalid Stations Selected.")
+                    mb.showerror(
+                        title="Error", 
+                        message="Invalid Stations Selected.")
         if len(ind) < 2:
-            mb.showerror(title="Error", message="Invalid Stations Selected.")
+            mb.showerror(
+                title="Error", 
+                message="Invalid Stations Selected.")
             print(ind)
             return False
         actual = path[ind[0][0]:ind[1][0]+1]
         _iternary = {
             'trainno':self.trainno,
-            'path':((ind[0][1], ind[1][1]), actual),
+            'path':(
+                (
+                    ind[0][1], 
+                    ind[1][1]
+                    ), 
+                    actual
+                    ),
             'cost':cost
         }
         return _iternary
@@ -96,30 +109,46 @@ class ticket:
             2: gender
         """
         n = len(args)
-        x = basic.getdatawhere(type="*", name="trst", where=f"number='{self.trainno}'")[0]
+        x = basic.getdatawhere(
+            type="*", 
+            name="trst", 
+            where=f"number='{self.trainno}'"
+            )[0]
         path = x[1]
         ind = []
         cost = x[2]
         if basic.getdatawhere("wallet", "userlogin", f"id={self.uid}")[0][0] < cost*n:
-            mb.showerror(title="Error", message="Insufficient Balance!")
+            mb.showerror(
+                title="Error", 
+                message="Insufficient Balance!")
             return False
         path = json.loads(path)
         for i in path:
             if self.fromst == i:
-                ind.append([path.index(i), i])
+                ind.append(
+                    [path.index(i), i])
             elif self.tost == i:
                 if ind!=[]:
                     ind.append([path.index(i), i])
                 else:
-                    mb.showerror(title="Error", text="Invalid Sections Selected")
+                    mb.showerror(
+                        title="Error", 
+                        text="Invalid Sections Selected"
+                    )
         if len(ind) < 2:
-            mb.showerror(title="Error", text="Invalid Sections Selected")
+            mb.showerror(
+                title="Error", 
+                text="Invalid Sections Selected"
+            )
             print(ind)
             return False
         actual = path[ind[0][0]:ind[1][0]+1]
         ticd = 0
         for i in range(999999999):
-            ticd = random.randint(100000000, 999999999)
+            ticd = random.randint(
+                100000000, 
+                999999999
+            )
             if basic.getdatawhere("tid", 'ticketiternary', f'tid={ticd}') == []:
                 break
         _iternary = {
@@ -138,9 +167,21 @@ class ticket:
             k+=1 
         iternary=json.dumps(_iternary)
         dtx = str(date.isoformat(dte))
-        cu.execute('insert into ticketiternary values (%s, %s, %s, %s, %s)', (self.uid, self.trainno, iternary,ticd, dtx))
+        cu.execute('insert into ticketiternary values (%s, %s, %s, %s, %s)', 
+                   (
+                       self.uid, 
+                       self.trainno, 
+                       iternary,
+                       ticd, 
+                       dtx
+                       )
+                )
         db.commit()
-        data = basic.getdatawhere(type="*", name="userlogin", where=f'id="{self.uid}"')[0]
+        data = basic.getdatawhere(
+            type="*", 
+            name="userlogin", 
+            where=f'id="{self.uid}"'
+            )[0]
         cu.execute(f'update userlogin set wallet = {data[4] - (cost*n)} where id = "{self.uid}"')
         db.commit()
         return True
@@ -148,11 +189,22 @@ class ticket:
     def cancel_ticket(self, ticket_id):
         cu.execute(f'select * from ticketiternary where tid="{ticket_id}" and trainno="{self.trainno}"')
         data = cu.fetchall()
-        cuid = basic.getdatawhere(type="id", name="userlogin", where=f"log='{hex(uuid.getnode())}'")[0][0]
+        cuid = basic.getdatawhere(
+            type="id", 
+            name="userlogin", 
+            where=f"log='{hex(uuid.getnode())}'"
+            )[0][0]
         if data==[]:
-            return False, mb.showerror(title="Error", message="No Data Found!")
+            return False, mb.showerror(
+                title="Error", 
+                message="No Data Found!"
+                )
         else:
-            cost = basic.getdatawhere(type="cost", name="trst", where=f"number='{self.trainno}'")[0][0]
+            cost = basic.getdatawhere(
+                type="cost", 
+                name="trst", 
+                where=f"number='{self.trainno}'"
+                )[0][0]
             cost = 0.3*cost
             resp = mb.askyesno(
                 title="Confirm",
@@ -166,23 +218,40 @@ Note:  This can't be undone!"""
                 pass
             else:
                 return False
-            up = basic.getdatawhere("wallet", 'userlogin', f'id={cuid}')[0][0] + cost
+            up = basic.getdatawhere(
+                "wallet", 
+                'userlogin', 
+                f'id={cuid}'
+                )[0][0] + cost
             cu.execute(f'Update userlogin set wallet={up} where id={cuid}')
             cu.execute(f"delete from ticketiternary where uid={cuid}")
             db.commit()
-            return True, mb.showinfo(title="Done!", message=f"Your ticket has been cancelled!\nRefund Amount: {cost}")
+            return True, mb.showinfo(
+                title="Done!", 
+                message=f"Your ticket has been cancelled!\nRefund Amount: {cost}")
     
     def change_boarding(self, cur:str = None):
-        data = basic.getdatawhere("iternary", "ticketiternary", f"uid={self.uid} and trainno={self.trainno}")
+        data = basic.getdatawhere(
+            "iternary", 
+            "ticketiternary", 
+            f"uid={self.uid} and trainno={self.trainno}"
+            )
         if data == []:
-            return False, mb.showerror(title="Error", message="Can't find ticket!")
+            return False, mb.showerror(
+                title="Error", 
+                message="Can't find ticket!"
+                )
         else:
             data=data[0][0]
             data=json.loads(data)
             _board=data['path']
             _board[0].pop(0)
             _board[0].insert(0, cur)
-            x = basic.getdatawhere(type="*", name="trst", where=f"number='{self.trainno}'")[0]
+            x = basic.getdatawhere(
+                type="*", 
+                name="trst", 
+                where=f"number='{self.trainno}'"
+                )[0]
             path=x[1]
             ind = []
             cost=x[2]
@@ -194,9 +263,13 @@ Note:  This can't be undone!"""
                     if ind != []:
                         ind.append([path.index(i), i])
                     else:
-                        mb.showerror(title="Error", message="Invalid Stations Selected")
+                        mb.showerror(
+                            title="Error", 
+                            message="Invalid Stations Selected")
             if len(ind) != 2 or len(ind) < 2:
-                mb.showerror(title="Error", message="Invalid Stations Selected")
+                mb.showerror(
+                    title="Error", 
+                    message="Invalid Stations Selected")
             
             _actual = path[ind[0][0]:ind[1][0]+1]
             _fin = [[cur, _board[0][1]] ,_actual]
@@ -204,7 +277,10 @@ Note:  This can't be undone!"""
             _data = json.dumps(data)
             cu.execute("update ticketiternary set iternary=%s where uid=%s and trainno=%s", (_data, self.uid, self.trainno))
             db.commit()
-            return True, mb.showinfo(title="Done", message="Boarding Changed!")        
+            return True, mb.showinfo(
+                title="Done", 
+                message="Boarding Changed!"
+                )        
 
 class basic:
     def getdata(
@@ -223,7 +299,11 @@ class basic:
         k = cu.fetchall()
         return k 
 def gettime(train):
-        time = basic.getdatawhere('departure', 'schedules', f'train_number={train}')[0][0]
+        time = basic.getdatawhere(
+            'departure', 
+            'schedules', 
+            f'train_number={train}'
+            )[0][0]
         time = time.split(':')
         if int(time[0]) < 12:
             ap='am'
@@ -275,7 +355,9 @@ class user:
         for user in args:     
             cu.execute(f'update userlogin set log = "0" where name = "{user}"')
             mydb.commit()
-        return True, print('Logout Successfull')
+        return True, print(
+            'Logout Successfull'
+            )
         
     def register(name, 
                  password, 
@@ -284,9 +366,13 @@ class user:
                  email
                  ):
         if name == "" or password == "" or confirm_password == "" or phone == "" or email == "":
-            return False, mb.showerror("Error", "Details Missing")
+            return False, mb.showerror(
+                "Error", 
+                "Details Missing")
         if "@" not in email:
-            return False, mb.showerror("Error", "Invalid Email!")
+            return False, mb.showerror(
+                "Error", 
+                "Invalid Email!")
         cu.execute('Select * from userlogin')
         checkdata = cu.fetchall()
         if len(phone) != 10: 
@@ -316,12 +402,20 @@ class user:
         cu.execute('Select id from userlogin')
         fetch = cu.fetchall()
         if fetch == []:
-            id = random.randint(100000000, 999999999)
+            id = random.randint(
+                100000000, 
+                999999999
+            )
         else:
             for i in fetch:
-                id = random.randint(100000000, 999999999)
+                id = random.randint(
+                    100000000, 
+                    999999999
+                )
                 if i != id:
-                    print('id successful: ', id)
+                    print(
+                        'id successful: ', 
+                        id)
                     loopcount = 1
                     break
                 else:
@@ -335,7 +429,10 @@ class user:
                     5000.00, 
                     id, 
                     "0")) 
-        mb.showinfo(title="Successfull", message="User Registered.")  
+        mb.showinfo(
+            title="Successfull", 
+            message="User Registered."
+            )  
         mydb.commit() 
         return True
 
@@ -354,24 +451,34 @@ class admin:
         cu.execute(f'Select * from adminlogin where uniqueid = "{self.username}"') 
         fetch = cu.fetchall()
         if fetch == []:
-            return print("Username does not exist"), False
+            print("Username does not exist")
+            return False
         elif self.username == fetch[0][0] and self.password == fetch[0][1]:
-            return print('Login successful'), True
+            print('Login successful'), 
+            return True
         else:
-            return print("Incorrect Password"), False
+            print("Incorrect Password")
+            return False
         
 class traindata:
     def __init__(self, 
                  trainno: str):
         self.number = trainno
-        self.trainpath = json.loads(basic.getdatawhere('stxdata', 'traininfo', f'fromnum = "{self.number}"')[0][0])
+        self.trainpath = json.loads(
+            basic.getdatawhere(
+                'stxdata', 'traininfo', f'fromnum = "{self.number}"'
+            )[0][0])
         self.stx = []
         g = basic.getdata('name, cords, code', 'stations')
         for i in g:
             self.stx.append([i[0], json.loads(i[1]), i[2]])
 
     def get_train(self):
-        data = basic.getdatawhere('*', 'traininfo', f'fromnum = "{self.number}"')
+        data = basic.getdatawhere(
+            '*', 
+            'traininfo', 
+            f'fromnum = "{self.number}"'
+        )
         return data
 
     def get_schedule(self):
@@ -380,7 +487,10 @@ class traindata:
             print(i)
             for l in self.stx:
                 if i == l[1]:
-                    result.append([l[0], l[2]])
+                    result.append(
+                        [l[0], 
+                         l[2]
+                         ])
                 else:
                     print('err')
         return result
@@ -1677,12 +1787,173 @@ Note:  This can't be undone!
             tk.Label(
                 border,
                 text="Login as an Admin",
+                font="consolas 12 bold",
                 anchor="c"
             ).place(
                 x=2,
                 y=10,
                 width=296
             )
+            username = tkmisc.PlaceholderEntry(
+                border, 
+                placeholder="Admin Username"
+            )
+            username.place(
+                x=10,
+                y= 40,
+                width=280,
+            )
+            password = tkmisc.PlaceholderEntry(
+                border, 
+                placeholder="Admin Password",
+            )
+            password.place(
+                x=10,
+                y=65,
+                width=280,
+            )
+            adlogbtn = tk.Button(
+                border,
+                text="Login",
+                command=lambda: logasadmin(username.get_value(), password.get_value()),
+                borderwidth=1,
+                font="consolas 10 bold"
+            ).place(
+                x=10,
+                y=100,
+                width=280,
+            )
+            exitinsteadbtn = tk.Button(
+                border,
+                text="Exit Instead",
+                command=lambda: pop.destroy(),
+                borderwidth=1,
+                font="consolas 10 bold"
+            ).place(
+                x=10,
+                y=130,
+                width=280,
+            )
+            def logasadmin(name, paswd):
+                if name == "" or paswd == "":
+                    mb.showerror(
+                        title="Invalid Credentials",
+                        message="Kindly provide the credentials properly."
+                    )
+                    return False
+                tr = admin(name, paswd)
+                if tr.login():
+                    def show_loading():
+                        loading = tk.Toplevel(self)
+                        loading.title("Please wait")
+                        loading.geometry("200x150")
+                        loading.resizable(False, False)
+                        loading.grab_set()
+
+                        label = tk.Label(
+                            loading,
+                            text="Loading..",
+                            font="consolas 12 bold",
+                            anchor="center",
+                            bg="#1e2124",
+                            fg="white"
+                        )
+                        label.place(
+                            x=0,
+                            y=0,
+                            width=200,
+                            height=150
+                        )
+
+                        loading.update()
+
+                        return loading
+                    
+                    loading = show_loading()
+
+                    userdata = basic.getdata(
+                        "*", 'userlogin'
+                    )
+
+                    loading.destroy()
+
+                    pop.destroy()
+                    adminwindow = tk.Toplevel(self)
+                    adminwindow.title("Admin")
+                    adminwindow.geometry("700x500")
+                    adminwindow.resizable(False, False)
+                    adminwindow.grab_set()
+                    tk.Label(
+                        adminwindow,
+                        bg="#1e2124"
+                    ).place(
+                        x=0,
+                        y=0,
+                        width=700,
+                        height=500
+                    )
+                    imgone = Image.open("assets/admin/title.png")
+                    imgone = imgone.resize((700, 50))
+                    adminwindow.lbg = ImageTk.PhotoImage(imgone)
+                    tk.Label(adminwindow, image=adminwindow.lbg,
+                                            padx=0,
+                                            pady=0,
+                                            borderwidth=0,
+                                            relief="flat",
+                                            highlightthickness=1,
+                                            highlightbackground="black",
+                                            ).place(
+                                                x=0,
+                                                y=0,
+                                            )
+                    tk.Label(
+                        adminwindow,
+                        text=f"Welcome, {name.capitalize().split(' ')[0]}",
+                        font="consolas 15 bold",
+                        anchor="w",
+                        justify="left",
+                        bg="#1e2124",
+                        fg="#FFFFFF"
+                    ).place(
+                        x=10,
+                        y=60,
+                    )
+                    manageusers = tk.Button(
+                        adminwindow,
+                        text="Manage Users",
+                        command=lambda: manageusers(),
+                        fg="#FFFFFF",
+                        bg="#282b30"
+                    ).place(
+                        x=10,
+                        y=100,
+                        width=220,
+                        height=25
+                    )
+                    managetrains = tk.Button(
+                        adminwindow,
+                        text="Manage Trains",
+                        command=lambda: managetrains(),
+                        fg="#FFFFFF",
+                        bg="#282b30"
+                    ).place(
+                        x=240,
+                        y=100,
+                        width=220,
+                        height=25
+                    )
+                    managetickets = tk.Button(
+                        adminwindow,
+                        text="Manage Tickets",
+                        command=lambda: managetickets(),
+                        fg="#FFFFFF",
+                        bg="#282b30"
+                    ).place(
+                        x=470,
+                        y=100,
+                        width=220,
+                        height=25
+                    )
             
             for i in border.winfo_children():
                 try:
@@ -1757,17 +2028,47 @@ Mobile No.: {mob}""",
             self.logoutbtn=tk.Button(
                 self, 
                 text="Logout", 
-                bg="#D0DBA9"
-            )#, command=lambda: logoutcmd())
-            self.logoutbtn.place(
-                x=689, 
-                y=400, 
-                width=116
+                bg="#D0DBA9",
+                command=lambda: logoutcmd()
             )
-            tk.Label(
+            self.logoutbtn.place(
+                x=570, 
+                y=400, 
+                width=235
+            )
+            def logoutcmd():
+                resp = mb.askyesno(
+                    title="Confirm",
+                    message="Are you sure you want to logout?"
+                )
+                if resp:
+                    u=basic.getdata('name, log', 'userlogin')
+                    for i in u:
+                        if i[1] == hex(uuid.getnode()):
+                            user.logout(i[0])
+                    self.regbtn.place(x=600, y=220, width=175)
+                    self.logbtn.place(x=600, y=190, width=175)
+                    self.username.place(x=600, y=130, width=175)
+                    self.password.place(x=600, y=160, width=175)
+                    self.loginlb.place(x=600, y=101, width=175)
+                    self.adminlogbtn.place(x=600, y=250, width=175)
+                    self.namelabel.destroy()
+                    self.uidlabel.destroy()
+                    self.walletlabel.destroy()
+                    self.upcomingjourneyslabel.destroy()
+                    self.upcomingjourneys.destroy()
+                    self.ticket_widgets = {}
+                    self.logoutbtn.destroy()
+                    self.background1223.destroy()
+                else:
+                    return False
+
+                
+            self.background1223 = tk.Label(
                 self,
                 bg="#C7C4D9",
-            ).place(
+            )
+            self.background1223.place(
                 x=570,
                 y=240,
                 width=235,
@@ -1780,7 +2081,8 @@ Mobile No.: {mob}""",
                 font=("Consolas", 10, "bold"),
                 anchor="w",
                 justify="left"
-            ).place(
+            )
+            self.upcomingjourneyslabel.place(
                 x=570,
                 y=240,
                 height=20
@@ -1845,6 +2147,14 @@ Mobile No.: {mob}""",
             )
             self.ticket_widgets = {}
 
+            def cancelticket(tid, train, iternary, ticketframe):
+                ticket_object = ticket(train,
+                                    iternary['path'][0][0],
+                                    iternary['path'][0][1])
+                if ticket_object.cancel_ticket(tid):
+                    ticketframe.destroy()
+                    self.ticket_widgets.pop(tid)
+
             def updatelogdata():#event
                 wi = 235
                 hi = 135
@@ -1906,7 +2216,7 @@ Path: {path}""",
                             ticketframe,
                             text="Cancel",
                             bg="#565B68",
-                            command=lambda tid=tid: cancelticket(tid)
+                            command=lambda tid=tid: cancelticket(tid, train, iternary, ticketframe)
                         )
                         cancelbtn.place(
                             x=1,
@@ -2114,30 +2424,15 @@ Path: {path}""",
                                     )
                                 except Exception as e:
                                     pass
-
-                            
-
-
-                        def cancelticket(tid):
-                            ticket_object = ticket(train,
-                                                iternary['path'][0][0],
-                                                iternary['path'][0][1])
-                            if ticket_object.cancel_ticket(tid):
-                                ticketframe.destroy()
-                                self.ticket_widgets.pop(tid)
-                        
-
+       
                 except Exception as e:
                         print(e)
                 finally:
                     self.after(1000, lambda: updatelogdata())
             updatelogdata()
 
-            """self.bind_all("<Key>",lambda event: updatelogdata(event))
-            self.bind_all("<Button>",lambda event: updatelogdata(event))
-            self.bind_all("<Motion>", lambda event: updatelogdata(event))"""
-           
-            
+
+
         def logbtncmd():
             success = loginuser(
                 self.username.get_value(),
