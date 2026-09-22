@@ -1756,130 +1756,297 @@ Mobile No.: {mob}""",
                 weight=1
             )
             self.ticket_widgets = {}
-        def updatelogdata(event):
-            wi = 235
-            hi = 135
-            try:
-                f=basic.getdatawhere(type="*",name="userlogin",where=f"log='{hex(uuid.getnode())}'")
-                if f != []:
-                    name=f[0][0]
-                    mob=f[0][2]
-                    mail=f[0][3]
-                    uid=f[0][5]
-                    wallet=f[0][4]
-                    self.walletlabel.config(text=f"Balance: ₹{wallet}/-")
-                ticketdata = basic.getdatawhere(type="*", name="ticketiternary", where=f"uid='{uid}'")
-                if ticketdata == []:
-                    return
-                for i in ticketdata:
-                    iternary = json.loads(i[2])
-                    tid = i[3]
-                    date = i[4]
-                    path = f"{iternary['path'][0][0]} - {iternary['path'][0][1]}"
-                    train = i[1]
-                    if tid in self.ticket_widgets:
-                        continue
-                    iternary = json.loads(i[2])
-                    ticketframe = tk.Frame(
-                        self.upcomingjourneysframe,
-                        bd=2,
-                        relief="flat",
-                        width=wi-20,
-                        height=100,
-                        borderwidth=.5,
-                        bg="#9FA6DA"
-                    )
-                    ticketframe.pack(
-                        padx=5,
-                        pady=5
-                    )
-                    nopas = 0
-                    for key, value in iternary.items():
-                        nopas += 1
-                    nopas = nopas - 1
-                    tk.Label(
-                        ticketframe,
-                        text=f"""Train No: {train}
-No Of Passengers: {nopas}
-Date of Journey: {date}
-Path: {path}""",
-                        bg="#9FA6DA",
-                        font="consolas 10 bold",
-                        anchor="w",
-                        justify="left"
-                    ).place(
-                        x=1,
-                        y=1
-                    )
-                    cancelbtn = tk.Button(
-                        ticketframe,
-                        text="Cancel",
-                        bg="#565B68",
-                        command=lambda tid=tid: cancelticket(tid)
-                    )
-                    cancelbtn.place(
-                        x=1,
-                        y=70,
-                        height=20,
-                        width=80
-                    )
-                    infobtn = tk.Button(
-                        ticketframe,
-                        text="Info",
-                        bg="#565B68",
-                        command=lambda tid=tid: ticketinfo(tid)
-                    )
-                    infobtn.place(
-                        x=87,
-                        y=70,
-                        height=20,
-                        width=113
-                    )
-                    self.ticket_widgets[tid] = ticketframe
-                    def ticketinfo(tid):
-                        inf = tk.Toplevel(self,)
-                        inf.title("Ticket Info")
-                        inf.geometry("400x200")
-                        inf.resizable(False, False)
-                        inf.grab_set()
-                        k=Image.open("assets/noonbackground.png")
-                        k=k.resize((400, 200))
-                        inf.inimg = ImageTk.PhotoImage(k)
-                        tk.Label(inf, image=inf.inimg,
-                                        padx=0,
-                                        pady=0,
-                                        borderwidth=0,
-                                        relief="flat",
-                                        highlightthickness=1,
-                                        highlightbackground="black",
-                                        ).place(
-                                            x=0,
-                                            y=0,
-                                            relwidth=1,
-                                            relheight=1
-                                        )
-                        tk.Label(
-                            inf,
-                            text=f"Train No: {train}",
-                            bg="#FFF0BE",
-                            font="courier 15 bold"
+            def updatelogdata():#event
+                wi = 235
+                hi = 135
+                try:
+                    f=basic.getdatawhere(type="*",name="userlogin",where=f"log='{hex(uuid.getnode())}'")
+                    if f == []:
+                        return
+                    if f != []:
+                        name=f[0][0]
+                        mob=f[0][2]
+                        mail=f[0][3]
+                        uid=f[0][5]
+                        wallet=f[0][4]
+                        self.walletlabel.config(text=f"Balance: ₹{wallet}/-")
+                    ticketdata = basic.getdatawhere(type="*", name="ticketiternary", where=f"uid='{uid}'")
+                    if ticketdata == []:
+                        return
+                    for i in ticketdata:
+                        iternary = json.loads(i[2])
+                        tid = i[3]
+                        dte = i[4]
+                        path = f"{iternary['path'][0][0]} - {iternary['path'][0][1]}"
+                        train = i[1]
+                        if tid in self.ticket_widgets:
+                            continue
+                        iternary = json.loads(i[2])
+                        ticketframe = tk.Frame(
+                            self.upcomingjourneysframe,
+                            bd=2,
+                            relief="flat",
+                            width=wi-20,
+                            height=100,
+                            borderwidth=.5,
+                            bg="#9FA6DA"
                         )
+                        ticketframe.pack(
+                            padx=5,
+                            pady=5
+                        )
+                        nopas = 0
+                        for key, value in iternary.items():
+                            nopas += 1
+                        nopas = nopas - 1
+                        tk.Label(
+                            ticketframe,
+                            text=f"""Train No: {train}
+No Of Passengers: {nopas}
+Date of Journey: {dte}
+Path: {path}""",
+                            bg="#9FA6DA",
+                            font="consolas 10 bold",
+                            anchor="w",
+                            justify="left"
+                        ).place(
+                            x=1,
+                            y=1
+                        )
+                        cancelbtn = tk.Button(
+                            ticketframe,
+                            text="Cancel",
+                            bg="#565B68",
+                            command=lambda tid=tid: cancelticket(tid)
+                        )
+                        cancelbtn.place(
+                            x=1,
+                            y=70,
+                            height=20,
+                            width=80
+                        )
+                        infobtn = tk.Button(
+                            ticketframe,
+                            text="Info",
+                            bg="#565B68",
+                            command=lambda tid=tid: ticketinfo(tid)
+                        )
+                        infobtn.place(
+                            x=87,
+                            y=70,
+                            height=20,
+                            width=113
+                        )
+                        self.ticket_widgets[tid] = ticketframe
+                        def ticketinfo(tid):
+                            inf = tk.Toplevel(self,)
+                            inf.title("Ticket Info")
+                            inf.geometry("400x200")
+                            inf.resizable(False, False)
+                            inf.grab_set()
+                            k=Image.open("assets/noonbackground.png")
+                            k=k.resize((400, 200))
+                            inf.inimg = ImageTk.PhotoImage(k)
+                            tk.Label(inf, image=inf.inimg,
+                                            padx=0,
+                                            pady=0,
+                                            borderwidth=0,
+                                            relief="flat",
+                                            highlightthickness=1,
+                                            highlightbackground="black",
+                                            ).place(
+                                                x=0,
+                                                y=0,
+                                                relwidth=1,
+                                                relheight=1
+                                            )
+                            tk.Label(
+                                inf,
+                                text=f"{train}",
+                                bg="#F6D5C0",
+                                font="courier 9 bold"
+                            ).place(
+                                x=1,
+                                y=1,
+                                height=20
+                            )
+                            trainname = basic.getdatawhere('name', 'traininfo', f'fromnum="{train}"')[0][0]
+                            tk.Label(
+                                inf,
+                                text=f"{trainname}",
+                                bg="#F6D5C0",
+                                font="courier 9 bold"
+                            ).place(
+                                x=1,
+                                y=21,
+                                height=20
+                            )
+                            tk.Label(
+                                inf,
+                                text=path,
+                                bg="#F6D5C0",
+                                font="courier 9 bold"
+                            ).place(
+                                x=270,
+                                y=21,
+                            )
+                            tk.Label(
+                                inf,
+                                text=f"On: {dte}",
+                                bg="#F6D5C0",
+                                font="courier 9 bold"
+                            ).place(
+                                x=270,
+                                y=1
+                            )
+                            tk.Label(
+                                inf,
+                                text=f"Cost: ₹{iternary['1']['cost']}",
+                                bg="#F6D5C0",
+                                font="courier 9 bold"
+                            ).place(
+                                x=140,
+                                y=1
+                            )
+                            wid = 390
+                            hi = 135
+                            inf.pasinfo = tk.Frame(inf)
+                            tk.Label(
+                                inf,
+                                text="Passengers",
+                                bg="#F6ECC6",
+                                anchor="w",
+                                font="courier 10 bold"
+                            ).place(
+                                x=5,
+                                y=41,    
+                                height=20,
+                                width=wid
+                            )
+                            inf.pasinfo.place(
+                                x=5,
+                                y=61,
+                                width=390,
+                                height=135
+                            )
+                            inf.pasinfocanvas = tk.Canvas(
+                                inf.pasinfo,
+                                highlightthickness=0,
+                                bg="#F6ECC6"
+                            )
+                            inf.pasinfoscrollbar = tk.Scrollbar(
+                                inf.pasinfo,
+                                orient="vertical",
+                                command=inf.pasinfocanvas.yview
+                            )
+                            inf.pasinfoframe = tk.Frame(
+                                inf.pasinfocanvas,
+                                bg="#F6ECC6"
+                            )
+                            inf.pasinfoframe.bind(
+                                "<Configure>",
+                                lambda e: inf.pasinfocanvas.configure(
+                                    scrollregion=inf.pasinfocanvas.bbox("all")
+                                )
+                            )
+                            inf.pasinfocanvas.create_window(
+                                (0,0),
+                                window=inf.pasinfoframe,
+                                anchor="nw",
+                                width=wid-20,
+                            )
+                            inf.pasinfocanvas.configure(
+                                yscrollcommand=inf.pasinfoscrollbar.set
+                            )
+                            inf.pasinfocanvas.place(
+                                x=0,
+                                y=0,
+                                width=wid-20,
+                                height=hi
+                            )
+                            inf.pasinfoscrollbar.place(
+                                x=wid-20,
+                                y=0,
+                                width=20,
+                                height=hi
+                            )
+                            inf.pasinfo.grid_rowconfigure(
+                                0,
+                                weight=1
+                            )
+                            inf.pasinfo.grid_columnconfigure(   
+                                0,
+                                weight=1
+                            )
+                            for key in iternary:
+                                try:
+                                    name = iternary[key]['name']
+                                    gender = iternary[key]['gender']
+                                    age = iternary[key]['age']
+                                    pasframe = tk.Frame(
+                                        inf.pasinfoframe,
+                                        bd=2,
+                                        relief="flat",
+                                        width=wid-20,
+                                        height=70,
+                                        borderwidth=1,
+                                        bg="#F2AB82"
+                                    )
+                                    pasframe.pack(
+                                        padx=5,
+                                        pady=5
+                                    )
+                                    tk.Label(
+                                        pasframe,
+                                        text=f"{name}",
+                                        bg="#F2AB82",
+                                        font="courier 10 bold"
+                                    ).place(
+                                        x=1,
+                                        y=1
+                                    )
+                                    tk.Label(
+                                        pasframe,
+                                        text=f"Gender: {gender}",
+                                        bg="#F2AB82",
+                                        font="courier 10 bold"
+                                    ).place(
+                                        x=1,
+                                        y=21
+                                    )
+                                    tk.Label(
+                                        pasframe,
+                                        text=f"Age: {age}",
+                                        bg="#F2AB82",
+                                        font="courier 10 bold"
+                                    ).place(
+                                        x=1,
+                                        y=41
+                                    )
+                                except Exception as e:
+                                    pass
 
-                    def cancelticket(tid):
-                        ticket_object = ticket(train,
-                                               iternary['path'][0][0],
-                                               iternary['path'][0][1])
-                        if ticket_object.cancel_ticket(tid):
-                            ticketframe.destroy()
-                            self.ticket_widgets.pop(tid)
-                    
+                            
 
-            except Exception as e:
-                e = str(e)
-                if e=="local variable 'uid' referenced before assignment":pass
-        self.bind_all("<Key>",lambda event: updatelogdata(event))
-        self.bind_all("<Button>",lambda event: updatelogdata(event))
-        self.bind_all("<Motion>", lambda event: updatelogdata(event))
+
+                        def cancelticket(tid):
+                            ticket_object = ticket(train,
+                                                iternary['path'][0][0],
+                                                iternary['path'][0][1])
+                            if ticket_object.cancel_ticket(tid):
+                                ticketframe.destroy()
+                                self.ticket_widgets.pop(tid)
+                        
+
+                except Exception as e:
+                        print(e)
+                finally:
+                    self.after(1000, lambda: updatelogdata())
+            updatelogdata()
+
+            """self.bind_all("<Key>",lambda event: updatelogdata(event))
+            self.bind_all("<Button>",lambda event: updatelogdata(event))
+            self.bind_all("<Motion>", lambda event: updatelogdata(event))"""
            
             
         def logbtncmd():
