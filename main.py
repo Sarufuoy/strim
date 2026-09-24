@@ -1954,7 +1954,120 @@ Note:  This can't be undone!
                         width=220,
                         height=25
                     )
-            
+                    querytypelabel = tk.Label(
+                        adminwindow,
+                        text="Select your Query..",
+                        font=("Consolas", 10, "bold"),
+                        anchor="w",
+                        justify="left",
+                        bg="#1e2124",
+                        fg="#FFFFFF"
+                    )
+                    querytypelabel.place(
+                        x=10,
+                        y=130,
+                        width=350,
+                        height=20
+                    )
+                    query_entry = tk.Entry(
+                        adminwindow,
+                        font=("Consolas", 10, "bold"),
+                        bg="#1e2124",
+                        fg="#FFFFFF",
+                        state="disabled"
+                    )
+                    query_entry.place(
+                        x=370,
+                        y=130,
+                        width=210,
+                        height=20,
+                    )
+                    querybtn = tk.Button(
+                        adminwindow,
+                        text="Search",
+                        command=lambda: querycmd(),
+                        bg="#282b30",
+                        fg="#FFFFFF",
+                        borderwidth=1,
+                        state="disabled",
+                        anchor="c",
+                        justify="center"
+                    )
+                    querybtn.place(
+                        x=590,
+                        y=130,
+                        width=100,
+                        height=20
+                    )
+                    frw = 680
+                    frh = 330
+                    x = 10
+                    y = 170
+                    adminwindow.queryframe = tk.Frame(
+                        adminwindow,
+                        bg="#282b30",
+                        bd=2,
+                        borderwidth=1
+                    )
+                    adminwindow.queryframe.place(
+                        x=10,
+                        y=160,
+                        width=frw,
+                        height=frh
+                    )
+                    adminwindow.querycanvas = tk.Canvas(
+                        adminwindow.queryframe,
+                        highlightthickness=0,
+                        bg="#282b30"
+                    )
+                    adminwindow.querycanvas.place(
+                        x=0,
+                        y=0,
+                        width=frw - 20,
+                        height=frh
+                    )
+                    adminwindow.queryscrollbar = tk.Scrollbar(
+                        adminwindow.queryframe,
+                        orient="vertical",
+                        command=adminwindow.querycanvas.yview
+                    )
+                    adminwindow.queryscrollbar.place(
+                        x=frw - 20,
+                        y=0,
+                        width=20,
+                        height=frh
+                    )
+                    adminwindow.queryinner = tk.Frame(
+                        adminwindow.querycanvas,
+                        bg="#282b30"
+                    )
+
+                    adminwindow.querycanvas.create_window(
+                        (0, 0),
+                        window=adminwindow.queryinner,
+                        anchor="nw",
+                        width=frw - 20
+                    )
+
+                    adminwindow.queryinner.bind(
+                        "<Configure>",
+                        lambda e: adminwindow.querycanvas.configure(
+                            scrollregion=adminwindow.querycanvas.bbox("all")
+                        )
+                    )
+
+                    adminwindow.querycanvas.configure(
+                        yscrollcommand=adminwindow.queryscrollbar.set
+                    )
+                    adminwindow.queryframe.grid_rowconfigure(
+                        0,
+                        weight=1
+                    )
+                    adminwindow.queryframe.grid_columnconfigure(   
+                        0,
+                        weight=1
+                    )
+                                
             for i in border.winfo_children():
                 try:
                     i.configure(
@@ -2059,6 +2172,8 @@ Mobile No.: {mob}""",
                     self.upcomingjourneys.destroy()
                     self.ticket_widgets = {}
                     self.logoutbtn.destroy()
+                    self.username.delete(0, tk.END)
+                    self.password.delete(0, tk.END)
                     self.background1223.destroy()
                 else:
                     return False
