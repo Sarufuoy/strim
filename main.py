@@ -1868,14 +1868,6 @@ Note:  This can't be undone!
                         loading.update()
 
                         return loading
-                    
-                    loading = show_loading()
-
-                    userdata = basic.getdata(
-                        "*", 'userlogin'
-                    )
-
-                    loading.destroy()
 
                     pop.destroy()
                     adminwindow = tk.Toplevel(self)
@@ -1924,7 +1916,8 @@ Note:  This can't be undone!
                         command=lambda: manageusers(),
                         fg="#FFFFFF",
                         bg="#282b30"
-                    ).place(
+                    )
+                    manageusers.place(
                         x=10,
                         y=100,
                         width=220,
@@ -1936,7 +1929,8 @@ Note:  This can't be undone!
                         command=lambda: managetrains(),
                         fg="#FFFFFF",
                         bg="#282b30"
-                    ).place(
+                    )
+                    managetrains.place(
                         x=240,
                         y=100,
                         width=220,
@@ -1948,7 +1942,8 @@ Note:  This can't be undone!
                         command=lambda: managetickets(),
                         fg="#FFFFFF",
                         bg="#282b30"
-                    ).place(
+                    )
+                    managetickets.place(
                         x=470,
                         y=100,
                         width=220,
@@ -1974,7 +1969,7 @@ Note:  This can't be undone!
                         font=("Consolas", 10, "bold"),
                         bg="#1e2124",
                         fg="#FFFFFF",
-                        state="disabled"
+                        state="readonly"
                     )
                     query_entry.place(
                         x=370,
@@ -2067,7 +2062,115 @@ Note:  This can't be undone!
                         0,
                         weight=1
                     )
-                                
+                    infolbl = tk.Label(
+                        adminwindow,
+                        text="",
+                        font=("Consolas", 7, "bold"),
+                        anchor="w",
+                        justify="left",
+                        bg="#1e2124",
+                        fg="#FFFFFF"
+                    )
+                    infolbl.place(
+                        x=10,
+                        y=150,
+                        height=10
+                    )
+                    def managetrains():
+                        infolbl.config(
+                            text="Limiting to top 250 trains"
+                        )
+                        querybtn.configure(
+                            state="active",
+                            bg="#282b30",
+                            fg="#FFFFFF",
+                        )
+                        query_entry.configure(
+                            state="normal"
+                        )
+                        querytypelabel.config(
+                            text="Enter Specific Train. No To Search ->"
+                        ) 
+                        for widget in adminwindow.queryinner.winfo_children():
+                                widget.destroy()
+                        loading = show_loading()
+                        trainsdata = cu.execute(
+                            'SELECT fromcode, fromnum, tocode, tonum, name, duration, type FROM traininfo LIMIT 250'
+
+                        )
+                        trainsdata = cu.fetchall()
+                        for i in trainsdata:
+                            trainframe = tk.Frame(
+                                adminwindow.queryinner,
+                                bd=2,
+                                relief="flat",
+                                width=frw-20,
+                                height=100,
+                                borderwidth=.5
+                            )
+                            trainframe.pack(
+                                padx=5,
+                                pady=5
+                            )
+                            bg = tk.Label(
+                                trainframe,
+                                bg="#1e2124",
+                                relief="flat",
+                                bd=1
+                            )
+                            bg.place(
+                                x=0,
+                                y=0,
+                                width=frw-20,
+                                height=100
+                            )
+                            tk.Label(
+                                trainframe,
+                                bg="#1e2124",
+                                text=f"{i[4]}",
+                                font="consolas 10 bold",
+                                anchor="w",
+                                justify="left"
+                            ).place(
+                                x=1,
+                                y=1,
+                                height=19
+                            )
+                            tk.Label(
+                                trainframe,
+                                text=f"{i[1]}",
+                                anchor="e",
+                                font="consolas 10 bold",
+                            ).place(
+                                x=520,
+                                y=1,
+                                height=19
+                            )
+                            try:
+                                timeofdays = int(i[5])/24
+                            except:
+                                timeofdays = "not-defined"
+                            tk.Label(
+                                trainframe,
+                                text=f"Raw duration of journey: {timeofdays} Day(s)",
+                                anchor="e",
+                                font="consolas 10 bold",
+                            ).place(
+                                x=1,
+                                y=21,
+                                height=19
+                            )
+                            for w in trainframe.winfo_children():
+                                try:
+                                    w.configure(
+                                        bg="#1e2124",
+                                        fg="#FFFFFF"
+                                    )
+                                except:
+                                    pass
+                        loading.destroy()
+                        print(trainsdata)
+
             for i in border.winfo_children():
                 try:
                     i.configure(
