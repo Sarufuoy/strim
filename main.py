@@ -2206,7 +2206,7 @@ Note:  This can't be undone!
                                         pass
                             loading.destroy()
                             print(trainsdata)
-                    def managetickets():
+                    def managetickets(type: Literal["all", "specific"] = "all", tid: int = None):
                         loading = show_loading()
                         for i in adminwindow.queryinner.winfo_children():
                             i.destroy()
@@ -2225,10 +2225,24 @@ Note:  This can't be undone!
                         querytypelabel.config(
                             text="Enter Specific Ticket. No To Search ->"
                         )
-                        cu.execute(
-                            "SELECT * FROM ticketiternary LIMIT 250"
-                        )
+                        if type == "all":
+                            cu.execute(
+                                "SELECT * FROM ticketiternary LIMIT 250"
+                            )
+                        elif type=="specific":
+                            cu.execute(
+                                "SELECT * FROM ticketiternary WHERE tid=%s",
+                                (tid,)
+                            )
                         ticketsdata = cu.fetchall()
+                        if ticketsdata == []:
+                            loading.destroy()
+                            mb.showinfo(
+                                title="Error",
+                                message="No Tickets Found"
+                            )
+                            adminwindow.lift()
+                            return False
                         for i in ticketsdata:
                             ticketframe = tk.Frame(
                                 adminwindow.queryinner,
@@ -2312,14 +2326,14 @@ Note:  This can't be undone!
                                 y=41,
                                 height=19
                             )
-                        for widget in ticketframe.winfo_children():
-                                try:
-                                    widget.configure(
-                                        bg="#1e2124",
-                                        fg="#FFFFFF"
-                                    )
-                                except:
-                                    pass
+                            for widget in ticketframe.winfo_children():
+                                    try:
+                                        widget.configure(
+                                            bg="#1e2124",
+                                            fg="#FFFFFF"
+                                        )
+                                    except:
+                                        pass
                         loading.destroy()
                     def managetrains():
                         adminwindow.typeofquery = 1
