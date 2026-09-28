@@ -1703,13 +1703,27 @@ Note:  This can't be undone!
 
             try:
                 success = user.login(name, paswd)
-
+                
                 if success:
                     mb.showinfo(
                         title="Successful",
                         message="Logged In!"
                     )
-                    return True
+                    uid = basic.getdatawhere('id', 'userlogin', f'name="{name}"')[0][0]
+                    admmsgs = basic.getdatawhere("message", "admmsg", f"id='{uid}'")
+                    if admmsgs == []:
+                        print("Clean Login -> "+uid)
+                        return True
+                    else:
+                        for i in admmsgs:
+                            mb.showinfo(
+                                title="Info",
+                                message=f"""Message From Admin
+
+{i[0]}
+"""
+                        )
+                        return True
                 else:
                     return False
 
@@ -1719,7 +1733,7 @@ Note:  This can't be undone!
                     title="Unsuccessful",
                     message="Login Attempt Unsuccessful!"
                 )
-                return False
+                raise e
             
         self.adminlogbtn = tk.Button(
             self,
