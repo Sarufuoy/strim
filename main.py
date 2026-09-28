@@ -2206,6 +2206,17 @@ Note:  This can't be undone!
                                         pass
                             loading.destroy()
                             print(trainsdata)
+                        elif adminwindow.typeofquery == 2:
+                            if query_entry.get() == "":
+                                mb.showerror(
+                                    title="Error", 
+                                    message="Empty Ticket. Id."
+                                )
+                                adminwindow.lift()
+                                managetickets()
+                                return False
+                            else:
+                                managetickets(type="specific", tid=query_entry.get())
                     def managetickets(type: Literal["all", "specific"] = "all", tid: int = None):
                         loading = show_loading()
                         for i in adminwindow.queryinner.winfo_children():
@@ -2229,12 +2240,21 @@ Note:  This can't be undone!
                             cu.execute(
                                 "SELECT * FROM ticketiternary LIMIT 250"
                             )
+                            ticketsdata = cu.fetchall()
                         elif type=="specific":
                             cu.execute(
                                 "SELECT * FROM ticketiternary WHERE tid=%s",
                                 (tid,)
                             )
-                        ticketsdata = cu.fetchall()
+                            ticketsdata = cu.fetchall()
+                            if ticketsdata == []:
+                                loading.destroy()
+                                mb.showinfo(
+                                    title="Error",
+                                    message="No Tickets Found"
+                                )
+                                adminwindow.lift()
+                                return False
                         if ticketsdata == []:
                             loading.destroy()
                             mb.showinfo(
@@ -2326,6 +2346,230 @@ Note:  This can't be undone!
                                 y=41,
                                 height=19
                             )
+                            td = i[3]
+                            tk.Button(
+                                ticketframe,
+                                text="Passengers Info",
+                                anchor="c",
+                                font="consolas 10 bold",
+                                relief="sunken",
+                            command=lambda  td=td: ticketinfox(td),
+                            ).place(
+                                x=5,
+                                y=65,
+                                height=25,
+                                width=310
+                            )
+                            tk.Button(
+                                ticketframe,
+                                text="Cancel Ticket",
+                                anchor="c",
+                                font="consolas 10 bold",
+                                relief="sunken",
+                                command=lambda: print("Book"),
+                            ).place(
+                                x=325,
+                                y=65,
+                                height=25,
+                                width=310
+                            )
+
+                            def ticketinfox(tid):
+                                ticketdata = basic.getdatawhere(type="*", name="ticketiternary", where=f"tid='{tid}'")
+                                if ticketdata == []:
+                                    return
+                                for i in ticketdata:
+                                    iternary = json.loads(i[2])
+                                    tid = i[3]
+                                    dte = i[4]
+                                    path = f"{iternary['path'][0][0]} - {iternary['path'][0][1]}"
+                                    train = i[1]
+                                inf = tk.Toplevel(self,)
+                                inf.title("Ticket Info")
+                                inf.geometry("400x200")
+                                inf.resizable(False, False)
+                                inf.grab_set()
+                                tk.Label(inf,
+                                                padx=0,
+                                                pady=0,
+                                                bg="#1e2124",
+                                                borderwidth=0,
+                                                relief="flat",
+                                                highlightthickness=1,
+                                                highlightbackground="black",
+                                                ).place(
+                                                    x=0,
+                                                    y=0,
+                                                    relwidth=1,
+                                                    relheight=1,
+                                                    height=200,
+                                                    width=400
+                                                )
+                                tk.Label(
+                                    inf,
+                                    text=f"{train}",
+                                    bg="#1e2124",fg="#FFFFFF",
+                                    font="courier 9 bold"
+                                ).place(
+                                    x=1,
+                                    y=1,
+                                    height=20
+                                )
+                                trainname = basic.getdatawhere('name', 'traininfo', f'fromnum="{train}"')[0][0]
+                                tk.Label(
+                                    inf,
+                                    text=f"{trainname}",
+                                    bg="#1e2124",fg="#FFFFFF",
+                                    font="courier 9 bold"
+                                ).place(
+                                    x=1,
+                                    y=21,
+                                    height=20
+                                )
+                                tk.Label(
+                                    inf,
+                                    text=path,
+                                    bg="#1e2124",fg="#FFFFFF",
+                                    font="courier 9 bold"
+                                ).place(
+                                    x=270,
+                                    y=21,
+                                )
+                                tk.Label(
+                                    inf,
+                                    text=f"On: {dte}",
+                                    bg="#1e2124",fg="#FFFFFF",
+                                    font="courier 9 bold"
+                                ).place(
+                                    x=270,
+                                    y=1
+                                )
+                                tk.Label(
+                                    inf,
+                                    text=f"Cost: ₹{iternary['1']['cost']}",
+                                    bg="#1e2124",fg="#FFFFFF",
+                                    font="courier 9 bold"
+                                ).place(
+                                    x=140,
+                                    y=1
+                                )
+                                wid = 390
+                                hi = 135
+                                inf.pasinfo = tk.Frame(inf)
+                                tk.Label(
+                                    inf,
+                                    text="Passengers",
+                                    bg="#1e2124",fg="#FFFFFF",
+                                    anchor="w",
+                                    font="courier 10 bold"
+                                ).place(
+                                    x=5,
+                                    y=41,    
+                                    height=20,
+                                    width=wid
+                                )
+                                inf.pasinfo.place(
+                                    x=5,
+                                    y=61,
+                                    width=390,
+                                    height=135
+                                )
+                                inf.pasinfocanvas = tk.Canvas(
+                                    inf.pasinfo,
+                                    highlightthickness=0,
+                                    bg="#282b30"
+                                )
+                                inf.pasinfoscrollbar = tk.Scrollbar(
+                                    inf.pasinfo,
+                                    orient="vertical",
+                                    command=inf.pasinfocanvas.yview
+                                )
+                                inf.pasinfoframe = tk.Frame(
+                                    inf.pasinfocanvas,
+                                    bg="#282b30"
+                                )
+                                inf.pasinfoframe.bind(
+                                    "<Configure>",
+                                    lambda e: inf.pasinfocanvas.configure(
+                                        scrollregion=inf.pasinfocanvas.bbox("all")
+                                    )
+                                )
+                                inf.pasinfocanvas.create_window(
+                                    (0,0),
+                                    window=inf.pasinfoframe,
+                                    anchor="nw",
+                                    width=wid-20,
+                                )
+                                inf.pasinfocanvas.configure(
+                                    yscrollcommand=inf.pasinfoscrollbar.set
+                                )
+                                inf.pasinfocanvas.place(
+                                    x=0,
+                                    y=0,
+                                    width=wid-20,
+                                    height=hi
+                                )
+                                inf.pasinfoscrollbar.place(
+                                    x=wid-20,
+                                    y=0,
+                                    width=20,
+                                    height=hi
+                                )
+                                inf.pasinfo.grid_rowconfigure(
+                                    0,
+                                    weight=1
+                                )
+                                inf.pasinfo.grid_columnconfigure(   
+                                    0,
+                                    weight=1
+                                )
+                                for key in iternary:
+                                    try:
+                                        name = iternary[key]['name']
+                                        gender = iternary[key]['gender']
+                                        age = iternary[key]['age']
+                                        pasframe = tk.Frame(
+                                            inf.pasinfoframe,
+                                            bd=2,
+                                            relief="flat",
+                                            width=wid-20,
+                                            height=70,
+                                            borderwidth=1,
+                                            bg="#FFFFFF"
+                                        )
+                                        pasframe.pack(
+                                            padx=5,
+                                            pady=5
+                                        )
+                                        tk.Label(
+                                            pasframe,
+                                            text=f"{name}",
+                                            bg="#FFFFFF",
+                                            font="courier 10 bold"
+                                        ).place(
+                                            x=1,
+                                            y=1
+                                        )
+                                        tk.Label(
+                                            pasframe,
+                                            text=f"Gender: {gender}",
+                                            bg="#FFFFFF",
+                                            font="courier 10 bold"
+                                        ).place(
+                                            x=1,
+                                            y=21
+                                        )
+                                        tk.Label(
+                                            pasframe,
+                                            text=f"Age: {age}",
+                                            bg="#FFFFFF",
+                                            font="courier 10 bold"
+                                        ).place(
+                                            x=1,
+                                            y=41
+                                        )
+                                    except Exception as e:
+                                        pass
                             for widget in ticketframe.winfo_children():
                                     try:
                                         widget.configure(
