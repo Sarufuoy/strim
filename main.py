@@ -1,3 +1,5 @@
+#230
+#2398
 import tkinter as tk, tkinter
 from tkinter import messagebox as mb
 from mysql.connector import connect
