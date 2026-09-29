@@ -186,14 +186,17 @@ class ticket:
         db.commit()
         return True
         
-    def cancel_ticket(self, ticket_id):
+    def cancel_ticket(self, ticket_id, type: Literal["dry", "spec"] = "spec", uid: str = None):
         cu.execute(f'select * from ticketiternary where tid="{ticket_id}" and trainno="{self.trainno}"')
         data = cu.fetchall()
-        cuid = basic.getdatawhere(
-            type="id", 
-            name="userlogin", 
-            where=f"log='{hex(uuid.getnode())}'"
-            )[0][0]
+        if type == "dry":
+            cuid = uid
+        else:
+            cuid = basic.getdatawhere(
+                type="id", 
+                name="userlogin", 
+                where=f"log='{hex(uuid.getnode())}'"
+                )[0][0]
         if data==[]:
             return False, mb.showerror(
                 title="Error", 
@@ -224,7 +227,7 @@ Note:  This can't be undone!"""
                 f'id={cuid}'
                 )[0][0] + cost
             cu.execute(f'Update userlogin set wallet={up} where id={cuid}')
-            cu.execute(f"delete from ticketiternary where uid={cuid}")
+            cu.execute(f"delete from ticketiternary where uid={cuid} and tid={ticket_id}")
             db.commit()
             return True, mb.showinfo(
                 title="Done!", 
@@ -1712,7 +1715,7 @@ Note:  This can't be undone!
                     uid = basic.getdatawhere('id', 'userlogin', f'name="{name}"')[0][0]
                     admmsgs = basic.getdatawhere("message", "admmsg", f"id='{uid}'")
                     if admmsgs == []:
-                        print("Clean Login -> "+uid)
+                        print("Clean Login -> "+ str(uid))
                         return True
                     else:
                         for i in admmsgs:
@@ -2325,6 +2328,16 @@ Note:  This can't be undone!
                                 height=19
                             )
                             tk.Label(
+                                ticketframe, 
+                                text=f"Train No: {i[1]}",
+                                anchor="e",
+                                font="consolas 10 bold",
+                            ).place(
+                                x=520,
+                                y=21,
+                                height=19
+                            )
+                            tk.Label(
                                 ticketframe,
                                 text=f"DOJ: {i[4]}",
                                 anchor="e",
@@ -2374,13 +2387,58 @@ Note:  This can't be undone!
                                 height=25,
                                 width=310
                             )
+                            def ccl(
+                                tkd, 
+                                uid, 
+                                train,
+                                fromstx,
+                                tostx,
+                                frame
+                            ):
+                                tkt = ticket(
+                                    train,
+                                    fromstx,
+                                    tostx
+                                )
+
+                                resp = mb.askyesno(
+                                    title="Confirm",
+                                    message="Are you sure you want to cancel this ticket As an Admin?"
+                                )
+
+                                if resp:
+                                    if tkt.cancel_ticket(
+                                        tkd,
+                                        type="dry",
+                                        uid=uid
+                                    ):
+                                        frame.destroy()
+                                        print("Ticket Cancelled")
+                                        adminwindow.lift()
+                                        return True
+
+                                return False
                             tk.Button(
                                 ticketframe,
                                 text="Cancel Ticket",
                                 anchor="c",
                                 font="consolas 10 bold",
                                 relief="sunken",
-                                command=lambda: print("Book"),
+                                command=lambda
+                                    tkd=i[3],
+                                    uid=i[0],
+                                    train=i[1],
+                                    fromstx=iternary['path'][0][0],
+                                    tostx=iternary['path'][0][1],
+                                    frame=ticketframe:
+                                    ccl(
+                                        tkd, 
+                                        uid,
+                                        train,
+                                        fromstx,
+                                        tostx,
+                                        frame
+                                    )
                             ).place(
                                 x=325,
                                 y=65,
@@ -2913,7 +2971,7 @@ Mobile No.: {mob}""",
             )
             self.ticket_widgets = {}
 
-            def cancelticket(tid, train, iternary, ticketframe):
+            def cancelticket(tid, train, iternary, ticketframe=None):
                 ticket_object = ticket(train,
                                     iternary['path'][0][0],
                                     iternary['path'][0][1])
