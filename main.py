@@ -1,5 +1,3 @@
-#230
-#2398
 import tkinter as tk, tkinter
 from tkinter import messagebox as mb
 from mysql.connector import connect
@@ -1728,6 +1726,8 @@ Note:  This can't be undone!
 {i[0]}
 """
                         )
+                        cu.execute(f"DELETE from admmsg where id='{uid}' and message='{i[0]}'")
+                        mydb.commit()
                         return True
                 else:
                     return False
@@ -2236,6 +2236,170 @@ Note:  This can't be undone!
                                 return False
                             else:
                                 managetickets(type="specific", tid=query_entry.get())
+                        elif adminwindow.typeofquery == 0:
+                            if query_entry.get() == "":
+                                mb.showerror(
+                                    title="Error", 
+                                    message="Empty User Id."
+                                )
+                                adminwindow.lift()
+                                manageusers()
+                                return False
+                            else:
+                                managetickets(type="specific", tid=query_entry.get())
+                    def manageusers(type: Literal["all", "specific"] = "all", uid: int = None):
+                        loading = show_loading()
+                        for i in adminwindow.queryinner.winfo_children():
+                            i.destroy()
+                        adminwindow.typeofquery = 0
+                        infolbl.config(
+                            text="Limiting to top 250 users"
+                        )
+                        querybtn.configure(
+                            state="active",
+                            bg="#282b30",
+                            fg="#FFFFFF",
+                        )
+                        query_entry.configure(
+                            state="normal"
+                        )
+                        querytypelabel.config(
+                            text="Enter Specific User. No To Search ->"
+                        ) 
+                        if type == "all":
+                            cu.execute(
+                                "SELECT * FROM userlogin LIMIT 250"
+                            )
+                            userlogindata = cu.fetchall()
+                        elif type=="specific":
+                            cu.execute(
+                                "SELECT * FROM userlogin WHERE id=%s",
+                                (uid,)
+                            )
+                            userlogindata = cu.fetchall()
+                            if userlogindata == []:
+                                loading.destroy()
+                                mb.showinfo(
+                                    title="Error",
+                                    message="No User Found"
+                                )
+                                adminwindow.lift()
+                                return False
+                        if userlogindata == []:
+                            loading.destroy()
+                            mb.showinfo(
+                                title="Error",
+                                message="No User Found"
+                            )
+                            adminwindow.lift()
+                            return False
+                        for i in userlogindata:
+                            userframe = tk.Frame(
+                                adminwindow.queryinner,
+                                bd=2,
+                                relief="flat",
+                                width=frw-20,
+                                height=100,
+                                borderwidth=.5
+                            )
+                            userframe.pack(
+                                padx=5,
+                                pady=5
+                            )
+                            bg = tk.Label(
+                                userframe,
+                                bg="#1e2124",
+                                relief="flat",
+                                bd=1
+                            )
+                            bg.place(
+                                x=0,
+                                y=0,
+                                width=frw-20,
+                                height=100
+                            )
+                            tk.Label(
+                                userframe,
+                                bg="#1e2124",
+                                text=f"Name: {i[0]}",
+                                font="consolas 10 bold",
+                                anchor="w",
+                                justify="left"
+                            ).place(
+                                x=1,
+                                y=1,
+                                height=19
+                            )
+                            tk.Label(
+                                userframe,
+                                text=f"Phone: {i[2]}",
+                                anchor="e",
+                                font="consolas 10 bold",
+                            ).place(
+                                x=490,
+                                y=1,
+                                height=19
+                            )
+                            tk.Label(
+                                userframe,
+                                text=f"Pass: {i[1]}",
+                                anchor="e",
+                                font="consolas 10 bold",
+                            ).place(
+                                x=1,
+                                y=21,
+                                height=19
+                            )
+                            tk.Label(
+                                userframe,
+                                text=f"Wallet: {i[4]}",
+                                anchor="e",
+                                font="consolas 10 bold",
+                            ).place(
+                                x=490,
+                                y=21,
+                                height=19
+                            )
+                            tk.Label(
+                                userframe,
+                                text=f"Email: {i[3]}",
+                                anchor="e",
+                                font="consolas 10 bold",
+                            ).place(
+                                x=1,
+                                y=41,
+                                height=19
+                            )
+                            tk.Label(
+                                userframe,
+                                text=f"UID: {i[5]}",
+                                anchor="e",
+                                font="consolas 10 bold",
+                            ).place(
+                                x=490,
+                                y=41,
+                                height=19
+                            )
+                            tk.Label(
+                                userframe,
+                                text=f"Log: {i[6]}",
+                                anchor="e",
+                                font="consolas 10 bold",
+                            ).place(
+                                x=325,
+                                y=1,
+                                height=19
+                            )
+                            for i in userframe.winfo_children():
+                                try:
+                                    i.configure(
+                                        bg="#1e2124",
+                                        fg="#FFFFFF"
+                                    )
+                                except:
+                                    pass
+                        loading.destroy()
+                        print("Login Data Called By Admin")
                     def managetickets(type: Literal["all", "specific"] = "all", tid: int = None):
                         loading = show_loading()
                         for i in adminwindow.queryinner.winfo_children():
@@ -2417,6 +2581,12 @@ Note:  This can't be undone!
                                         frame.destroy()
                                         print("Ticket Cancelled")
                                         adminwindow.lift()
+                                        msg = f"One of your tickets has been cancelled by Admin,\n\nTicket Id: {tkd}\nPath: {fromstx} → {tostx}\nTrain No: {train}"
+                                        cu.execute(
+                                            "INSERT INTO admmsg (id, message) VALUES (%s, %s)",
+                                            (uid, msg)
+                                        )
+                                        mydb.commit()
                                         return True
 
                                 return False
