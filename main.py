@@ -2246,7 +2246,7 @@ Note:  This can't be undone!
                                 manageusers()
                                 return False
                             else:
-                                managetickets(type="specific", tid=query_entry.get())
+                                manageusers(type="specific", uid=query_entry.get())
                     def manageusers(type: Literal["all", "specific"] = "all", uid: int = None):
                         loading = show_loading()
                         for i in adminwindow.queryinner.winfo_children():
@@ -2294,6 +2294,7 @@ Note:  This can't be undone!
                             adminwindow.lift()
                             return False
                         for i in userlogindata:
+                            data = i
                             userframe = tk.Frame(
                                 adminwindow.queryinner,
                                 bd=2,
@@ -2390,6 +2391,122 @@ Note:  This can't be undone!
                                 y=1,
                                 height=19
                             )
+                            tk.Button(
+                                userframe,
+                                text=f"Issue Warning",
+                                anchor="c",
+                                justify="center",
+                                command=lambda uid=i[5]: issue_warning(uid)
+                            ).place(
+                                x=5,
+                                y=65,
+                                height=30,
+                                width=640
+                            )
+                            def issue_warning(usersid):
+                                top = tk.Toplevel(self)
+                                top.title("Warning Message")
+                                top.geometry("500x300")
+                                top.resizable(False, False)
+                                top.grab_set()
+                                tk.Label(
+                                    top,
+                                    bg="#1e2124",
+                                ).place(
+                                    x=0,
+                                    y=0,
+                                    height=300,
+                                    width=500
+                                )
+                                tk.Label(
+                                    top,
+                                    text="Enter Warning Message",
+                                    font="consolas 12 bold",
+                                    anchor="w"
+                                ).place(
+                                    x=1,
+                                    y=1,
+                                    width=498,
+                                    height=19
+                                )
+                                message=tk.Text(
+                                    top,
+                                    font="consolas 10 bold",
+                                    bg="#1e2124",
+                                    fg="#FFFFFF",
+                                    wrap="word"
+                                )
+                                message.place(
+                                    x=10,
+                                    y=25,
+                                    width=480,
+                                    height=246
+                                )
+                                for wid in top.winfo_children():
+                                    try:
+                                        wid.configure(
+                                            bg="#1e2124",
+                                            fg="#FFFFFF"
+                                        )
+                                    except:
+                                        pass
+                                counter = tk.Label(
+                                    top,
+                                    text="0/250",
+                                    font="consolas 8 bold",
+                                    fg="green",
+                                    bg="#1e2124",
+                                    anchor="e"
+                                )
+                                counter.place(
+                                    x=10,
+                                    y=275,
+                                    width=480,
+                                    height=10
+                                )
+                                def warnuser(userid=usersid):
+                                    text = message.get("1.0", "end-1c")
+
+                                    if len(text) > 250:
+                                        mb.showerror(
+                                            title="Error",
+                                            message="Exceeding Character Limit"
+                                        )
+                                        return
+
+                                    if mb.askyesno(
+                                        title="Confirm",
+                                        message="Are you sure you want to issue a warning to this user?"
+                                    ):
+                                        cu.execute(
+                                            "INSERT INTO admmsg (id, message) VALUES (%s, %s)",
+                                            (userid, text)
+                                        )
+                                        mydb.commit()
+                                        top.destroy()
+                                warn = tk.Button(
+                                    top,
+                                    text="Issue Warning",
+                                    font="consolas 10 bold",
+                                    command=lambda : warnuser(),
+                                )
+                                warn.place(
+                                    x=10,
+                                    y=275,
+                                    height=20,
+                                    width=400
+                                )
+                                def count_words(event=None):
+                                    t = message.get("1.0", "end-1c")
+                                    tlen = len(t)
+                                    if tlen>250:
+                                        counter.configure(fg="red")
+                                    elif tlen<=250:
+                                        counter.configure(fg="green")
+                                    counter.config(text=f"{tlen}/250")
+                                message.bind("<KeyRelease>", lambda event: count_words())
+
+
                             for i in userframe.winfo_children():
                                 try:
                                     i.configure(
