@@ -301,6 +301,7 @@ class basic:
         cu.execute(f'select {type} from {name} where {where}')
         k = cu.fetchall()
         return k 
+
 def gettime(train):
         time = basic.getdatawhere(
             'departure', 
@@ -376,12 +377,13 @@ class user:
             return False, mb.showerror(
                 "Error", 
                 "Invalid Email!")
-        cu.execute('Select * from userlogin')
-        checkdata = cu.fetchall()
         if len(phone) != 10: 
             mb.showerror("Error", 
                          "Phone number must be 10 digits")
             return False
+        cu.execute('Select * from userlogin')
+        checkdata = cu.fetchall()
+
         for i in checkdata:
             if i[0] == name:
                 mb.showerror("Error", 
@@ -2247,7 +2249,7 @@ Note:  This can't be undone!
                                 return False
                             else:
                                 manageusers(type="specific", uid=query_entry.get())
-                    def manageusers(type: Literal["all", "specific"] = "all", uid: int = None):
+                    def manageusers(type: Literal["all", "specific"] = "all", uid = None):
                         loading = show_loading()
                         for i in adminwindow.queryinner.winfo_children():
                             i.destroy()
@@ -2272,11 +2274,21 @@ Note:  This can't be undone!
                             )
                             userlogindata = cu.fetchall()
                         elif type=="specific":
+                            try:
+                                integeruid=int(uid)
+                            except:
+                                integeruid=0
                             cu.execute(
                                 "SELECT * FROM userlogin WHERE id=%s",
-                                (uid,)
+                                (integeruid,)
                             )
                             userlogindata = cu.fetchall()
+                            if userlogindata == []:
+                                cu.execute(
+                                    "SELECT * FROM userlogin WHERE name=%s",
+                                    (uid,)
+                                )
+                                userlogindata = cu.fetchall()
                             if userlogindata == []:
                                 loading.destroy()
                                 mb.showinfo(
